@@ -3,7 +3,7 @@ import { useLocalStorage } from "usehooks-ts"
 
 import { Chapter, getChapters } from "./levels"
 
-type Stage = "lobby" | "warmup" | "play" | "result"
+export type Stage = "lobby" | "warmup" | "test-single" | "test-series" | "result"
 
 type Difficulty = "easy" | "medium" | "hard"
 export const DIFFICULTIES: Difficulty[] = ["easy", "medium", "hard"]
