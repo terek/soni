@@ -2,12 +2,9 @@ import classNames from "classnames"
 import { FC, StrictMode, useContext, useMemo, useState } from "react"
 
 import { GameContext, GameProvider } from "./GameContext"
-import {
-  getLevels,
-  Level,
-  LEVEL_DATA,
-} from "./levels"
+import { getLevels, Level, LEVEL_DATA } from "./levels"
 
+import { CheckCircleIcon, CircleStackIcon } from "@heroicons/react/24/solid"
 
 function ImageButton({
   level,
@@ -106,7 +103,7 @@ const LobbyPage: FC = ({}) => {
           className="badge bg-blue-950 p-8 text-3xl text-white"
           onClick={() => {
             setLevel(level)
-            setStage("play")
+            setStage("warmup")
           }}
         >
           {level}
@@ -115,6 +112,50 @@ const LobbyPage: FC = ({}) => {
     </div>
   )
 }
+
+// const Timeline: FC = () => {
+//   return (
+//     <ul className="timeline w-full">
+//       <li>
+//         <div className="timeline-start w-24"></div>
+//         <div className="timeline-middle">
+//           <CheckCircleIcon className="size-12" />
+//         </div>
+//         <hr className="bg-primary" />
+//       </li>
+//       <li>
+//         <hr className="bg-primary" />
+//         <div className="timeline-start w-24"></div>
+//         <div className="timeline-middle">
+//           <CheckCircleIcon className="size-12" />
+//         </div>
+//         <hr className="bg-primary" />
+//       </li>
+//       <li>
+//         <hr className="bg-primary" />
+//         <div className="timeline-start w-24"></div>
+//         <div className="timeline-middle">
+//           <CircleStackIcon className="size-12" />
+//         </div>
+//         <hr />
+//       </li>
+//       <li>
+//         <hr />
+//         <div className="timeline-start w-24"></div>
+//         <div className="timeline-middle">
+//           <CircleStackIcon className="size-12" />
+//         </div>
+//         <hr />
+//       </li>
+//       <li>
+//         <hr />
+//         <div className="timeline-middle">
+//           <CircleStackIcon className="size-12" />
+//         </div>
+//       </li>
+//     </ul>
+//   )
+// }
 
 const PlayPage: FC = () => {
   const { setStage } = useContext(GameContext)
@@ -136,6 +177,24 @@ const PlayPage: FC = () => {
       >
         <Board />
         <div className="flex items-center justify-center">
+          {/* {stage === "warmup" &&
+            DIFFICULTIES.map((difficulty) => (
+              <button
+                key={difficulty}
+                className="badge bg-blue-950 p-8 text-3xl text-white"
+                onClick={() => {
+                  setStage("play")
+                  setDifficulty(difficulty)
+                }}
+              >
+                {difficulty}
+              </button>
+            ))}
+          {stage === "play" && (
+            <>
+              <Timeline />
+            </>
+          )} */}
           <button
             className="badge bg-blue-950 p-8 text-3xl text-white"
             onClick={() => setStage("lobby")}
