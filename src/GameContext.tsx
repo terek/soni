@@ -1,6 +1,6 @@
 import { createContext, FC, PropsWithChildren, useState } from "react"
 
-import { getLevels, Level } from "./levels"
+import { Chapter, getChapters } from "./levels"
 
 type Stage = "lobby" | "warmup" | "play" | "result"
 
@@ -9,17 +9,17 @@ export const DIFFICULTIES: Difficulty[] = ["easy", "medium", "hard"]
 
 type GameContextType = {
   stage: Stage
-  level: Level
+  level: Chapter
   difficulty: Difficulty
   setStage: (stage: Stage) => void
-  setLevel: (level: Level) => void
+  setLevel: (level: Chapter) => void
   setDifficulty: (difficulty: Difficulty) => void
 }
 
 export const GameContext = createContext<GameContextType>({
   stage: "lobby",
-  level: getLevels()[0]!,
-  difficulty: "1",
+  level: getChapters()[0]!,
+  difficulty: "easy",
   setStage: () => {},
   setLevel: () => {},
   setDifficulty: () => {},
@@ -29,7 +29,7 @@ export const GameContext = createContext<GameContextType>({
 
 export const GameProvider: FC<PropsWithChildren> = ({ children }) => {
   const [stage, setStage] = useState<Stage>("lobby")
-  const [level, setLevel] = useState<Level>(getLevels()[0]!)
+  const [level, setLevel] = useState<Chapter>(getChapters()[0]!)
   const [difficulty, setDifficulty] = useState<Difficulty>("easy")
 
   return (

@@ -1,6 +1,6 @@
-export type Level = "01" | "02" | "03" | "04"
+export type Chapter = "01" | "02" | "03" | "04"
 
-interface LevelData {
+interface ChapterData {
   id: string
   numRows: number
   numCols: number
@@ -8,7 +8,7 @@ interface LevelData {
   names: Array<{ id: string; name: string }>
 }
 
-export const LEVEL_DATA: Record<Level, LevelData> = {
+export const CHAPTER_DATA: Record<Chapter, ChapterData> = {
   "01": {
     id: "01",
     numRows: 3,
@@ -95,7 +95,7 @@ export const LEVEL_DATA: Record<Level, LevelData> = {
   },
 }
 
-export function getLevels(): Array<Level> {
-  const keys = Object.keys(LEVEL_DATA) as Array<Level>
+export function getChapters(): Array<Chapter> {
+  const keys = Object.keys(CHAPTER_DATA) as Array<Chapter>
   return keys
 }

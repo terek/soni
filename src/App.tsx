@@ -2,9 +2,9 @@ import classNames from "classnames"
 import { FC, StrictMode, useContext, useMemo, useState } from "react"
 
 import { GameContext, GameProvider } from "./GameContext"
-import { getLevels, Level, LEVEL_DATA } from "./levels"
+import { getChapters, Chapter, CHAPTER_DATA } from "./levels"
 
-import { CheckCircleIcon, CircleStackIcon } from "@heroicons/react/24/solid"
+// import { CheckCircleIcon, CircleStackIcon } from "@heroicons/react/24/solid"
 
 function ImageButton({
   level,
@@ -12,7 +12,7 @@ function ImageButton({
   selected,
   onClick,
 }: {
-  level: Level
+  level: Chapter
   index: number
   selected: boolean
   onClick: () => void
@@ -45,7 +45,7 @@ function ImageButton({
 
 function Board() {
   const { level } = useContext(GameContext)
-  const levelData = useMemo(() => LEVEL_DATA[level], [level])
+  const levelData = useMemo(() => CHAPTER_DATA[level], [level])
   const [currentPlaying, setCurrentPlaying] = useState<number | null>(null)
   const startPlaying = (index: number) => {
     if (currentPlaying !== null) {
@@ -97,9 +97,9 @@ const LobbyPage: FC = ({}) => {
     <div className="flex h-full flex-col items-center justify-center gap-8">
       <div className="mb-8 text-5xl text-yellow-400">Sonic</div>
       {/* <div className="text-3xl">Choose a level to play</div> */}
-      {getLevels().map((level) => (
+      {getChapters().map((level) => (
         <button
-          key={level}
+          // key={level}
           className="badge bg-blue-950 p-8 text-3xl text-white"
           onClick={() => {
             setLevel(level)
@@ -166,7 +166,7 @@ const PlayPage: FC = () => {
           className="badge bg-blue-950 p-4 text-white"
           onClick={() => setStage("result")}
         >
-          Level 1
+          Chapter 1
         </button>
       </div> */}
       <div
