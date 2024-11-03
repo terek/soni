@@ -2,17 +2,17 @@ import classNames from "classnames"
 import { FC, StrictMode, useContext, useMemo, useState } from "react"
 
 import { GameContext, GameProvider } from "./GameContext"
-import { getChapters, Chapter, CHAPTER_DATA } from "./levels"
+import { Chapter, CHAPTER_DATA, getChapters } from "./levels"
 
 // import { CheckCircleIcon, CircleStackIcon } from "@heroicons/react/24/solid"
 
 function ImageButton({
-  level,
+  chapter,
   index,
   selected,
   onClick,
 }: {
-  level: Chapter
+  chapter: Chapter
   index: number
   selected: boolean
   onClick: () => void
@@ -27,7 +27,7 @@ function ImageButton({
           "border-transparent": !selected,
         },
       )}
-      src={`tiles/${level}/${indexStr}.jpg`}
+      src={`tiles/${chapter}/${indexStr}.jpg`}
       onClick={onClick}
     />
 
@@ -44,17 +44,17 @@ function ImageButton({
 }
 
 function Board() {
-  const { level } = useContext(GameContext)
-  const levelData = useMemo(() => CHAPTER_DATA[level], [level])
+  const { chapter } = useContext(GameContext)
+  const chapterData = useMemo(() => CHAPTER_DATA[chapter], [chapter])
   const [currentPlaying, setCurrentPlaying] = useState<number | null>(null)
   const startPlaying = (index: number) => {
     if (currentPlaying !== null) {
-      const id = levelData.names[currentPlaying].id
+      const id = chapterData.names[currentPlaying].id
       const audioElement = document.getElementById(`audio_${id}`)! as HTMLAudioElement
       audioElement.pause()
     }
     setCurrentPlaying(index)
-    const id = levelData.names[index].id
+    const id = chapterData.names[index].id
     const audioElement = document.getElementById(`audio_${id}`)! as HTMLAudioElement
     audioElement.play()
   }
@@ -68,47 +68,115 @@ function Board() {
           "m-0",
           "portrait:w-full portrait:max-w-[40rem]",
           "landscape:h-full landscape:w-[40rem]",
-          `grid place-items-stretch gap-2 ${levelData.classNames}`,
+          `grid place-items-stretch gap-2 ${chapterData.classNames}`,
         )}
       >
-        {Array.from({ length: levelData.numRows * levelData.numCols }).map((_, i) => (
-          <div key={i}>
-            <ImageButton
-              level={level}
-              index={i}
-              selected={currentPlaying === i}
-              onClick={() => startPlaying(i)}
-            />
-            <audio
-              id={`audio_${levelData.names[i].id}`}
-              src={`sounds/${level}/${levelData.names[i].id}.ogg`}
-              onEnded={() => endPlaying(i)}
-            />
-          </div>
-        ))}
+        {Array.from({ length: chapterData.numRows * chapterData.numCols }).map(
+          (_, i) => (
+            <div key={i}>
+              <ImageButton
+                chapter={chapter}
+                index={i}
+                selected={currentPlaying === i}
+                onClick={() => startPlaying(i)}
+              />
+              <audio
+                id={`audio_${chapterData.names[i].id}`}
+                src={`sounds/${chapter}/${chapterData.names[i].id}.ogg`}
+                onEnded={() => endPlaying(i)}
+              />
+            </div>
+          ),
+        )}
+      </div>
+    </div>
+  )
+}
+
+const DifficultyControl = () => {
+  const { difficulty, setDifficulty } = useContext(GameContext)
+  return (
+    <div>
+      <input
+        type="range"
+        min={0}
+        max={2}
+        value={difficulty === "easy" ? 0 : difficulty === "medium" ? 1 : 2}
+        className="range-tertiary range w-80"
+        step="1"
+        onChange={(value) => {
+          const v = parseInt(value.target.value)
+          setDifficulty(v === 0 ? "easy" : v === 1 ? "medium" : "hard")
+        }}
+      />
+      <div className="flex w-full justify-between px-2 text-xl text-yellow-300">
+        <span>easy</span>
+        <span>medium</span>
+        <span>hard</span>
       </div>
     </div>
   )
 }
 
 const LobbyPage: FC = ({}) => {
-  const { setStage, setLevel } = useContext(GameContext)
+  const { setStage, setChapter } = useContext(GameContext)
   return (
     <div className="flex h-full flex-col items-center justify-center gap-8">
       <div className="mb-8 text-5xl text-yellow-400">Sonic</div>
-      {/* <div className="text-3xl">Choose a level to play</div> */}
-      {getChapters().map((level) => (
+      {/* <div className="text-3xl">Choose a chapter to play</div> */}
+      {getChapters().map((chapter) => (
         <button
-          // key={level}
+          key={chapter}
           className="badge bg-blue-950 p-8 text-3xl text-white"
           onClick={() => {
-            setLevel(level)
+            setChapter(chapter)
             setStage("warmup")
           }}
         >
-          {level}
+          {chapter}
         </button>
       ))}
+      {/* <div className="flex items-center">
+        <label className="mr-2 text-xl">Nehézség</label>
+        <select className="select select-bordered w-full max-w-xs text-xl">
+          <option selected>easy </option>
+          <option>medium</option>
+          <option>hard</option>
+        </select>
+      </div> */}
+      {/* <div className="flex flex-col items-start gap-2">
+        <label className="radio-label flex items-center">
+          <input
+            type="radio"
+            name="radio-difficulty"
+            className="radio mr-2"
+            checked={difficulty === "easy"}
+            onChange={() => setDifficulty("easy")}
+          />
+          easy
+        </label>
+        <label className="radio-label flex items-center">
+          <input
+            type="radio"
+            name="radio-difficulty"
+            className="radio mr-2"
+            checked={difficulty === "medium"}
+            onChange={() => setDifficulty("medium")}
+          />
+          medium
+        </label>
+        <label className="radio-label flex items-center">
+          <input
+            type="radio"
+            name="radio-difficulty"
+            className="radio mr-2"
+            checked={difficulty === "hard"}
+            onChange={() => setDifficulty("hard")}
+          />
+          hard
+        </label>
+      </div> */}
+      <DifficultyControl />
     </div>
   )
 }

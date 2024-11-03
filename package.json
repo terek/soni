@@ -19,7 +19,8 @@
     "@types/react-dom": "^18.3.1",
     "classnames": "^2.5.1",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "usehooks-ts": "^3.1.0"
   },
   "devDependencies": {
     "@ianvs/prettier-plugin-sort-imports": "^4.3.1",

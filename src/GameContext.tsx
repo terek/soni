@@ -1,4 +1,5 @@
 import { createContext, FC, PropsWithChildren, useState } from "react"
+import { useLocalStorage } from "usehooks-ts"
 
 import { Chapter, getChapters } from "./levels"
 
@@ -9,19 +10,19 @@ export const DIFFICULTIES: Difficulty[] = ["easy", "medium", "hard"]
 
 type GameContextType = {
   stage: Stage
-  level: Chapter
+  chapter: Chapter
   difficulty: Difficulty
   setStage: (stage: Stage) => void
-  setLevel: (level: Chapter) => void
+  setChapter: (chapter: Chapter) => void
   setDifficulty: (difficulty: Difficulty) => void
 }
 
 export const GameContext = createContext<GameContextType>({
   stage: "lobby",
-  level: getChapters()[0]!,
+  chapter: getChapters()[0]!,
   difficulty: "easy",
   setStage: () => {},
-  setLevel: () => {},
+  setChapter: () => {},
   setDifficulty: () => {},
 })
 
@@ -29,12 +30,12 @@ export const GameContext = createContext<GameContextType>({
 
 export const GameProvider: FC<PropsWithChildren> = ({ children }) => {
   const [stage, setStage] = useState<Stage>("lobby")
-  const [level, setLevel] = useState<Chapter>(getChapters()[0]!)
-  const [difficulty, setDifficulty] = useState<Difficulty>("easy")
+  const [chapter, setChapter] = useState<Chapter>(getChapters()[0]!)
+  const [difficulty, setDifficulty] = useLocalStorage<Difficulty>("difficulty", "easy")
 
   return (
     <GameContext.Provider
-      value={{ stage, level, setStage, setLevel, difficulty, setDifficulty }}
+      value={{ stage, chapter, setStage, setChapter, difficulty, setDifficulty }}
     >
       {children}
     </GameContext.Provider>
