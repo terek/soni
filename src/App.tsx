@@ -4,31 +4,10 @@ import { FC, StrictMode, useContext, useMemo, useState } from "react"
 import { GameContext, GameProvider } from "./GameContext"
 import {
   getLevels,
-  GRID_COLS_CLASS,
-  GRID_ROWS_CLASS,
   Level,
   LEVEL_DATA,
 } from "./levels"
 
-import { BackspaceIcon } from "@heroicons/react/24/solid"
-
-function QuestionArea() {
-  return (
-    <div className="flex flex-col items-center justify-end bg-blue-800 text-gray-900">
-      <div
-        className={classNames(
-          "flex items-center justify-center",
-          "nunito-800 bg-blue-900 text-5xl text-blue-200",
-          "rounded-t-xl",
-          "portrait:h-48 portrait:w-[20rem]",
-          "landscape:h-24 landscape:w-[40rem]",
-        )}
-      >
-        5 x 4 = ?
-      </div>
-    </div>
-  )
-}
 
 function ImageButton({
   level,
