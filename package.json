@@ -2,6 +2,7 @@
   "name": "fe",
   "private": true,
   "version": "0.0.0",
+  "homepage": "https://terek.github.io/soni",
   "type": "module",
   "scripts": {
     "dev": "vite",
