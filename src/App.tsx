@@ -1,6 +1,6 @@
 import { FC, StrictMode, useContext } from "react"
 
-import { GameContext, GameProvider, Stage } from "./GameContext"
+import { GameContext, GameProvider, PLAY_STAGES, PlayStage, Stage } from "./GameContext"
 import { LobbyPage } from "./LobbyPage"
 import { PlayPage } from "./PlayPage"
 
@@ -36,15 +36,13 @@ const ResultPage: FC = () => {
   )
 }
 
-const PLAY_STAGES: Array<Stage> = ["warmup", "test-single", "test-series"] as const
-
 const Screen: FC<{}> = () => {
   const { stage } = useContext(GameContext)
 
   return (
     <>
       {stage === "lobby" && <LobbyPage />}
-      {PLAY_STAGES.includes(stage) && <PlayPage />}
+      {PLAY_STAGES.includes(stage as PlayStage) && <PlayPage />}
       {stage === "result" && <ResultPage />}
     </>
   )
@@ -54,7 +52,7 @@ function App() {
   return (
     <>
       <StrictMode>
-        <div className="h-screen bg-blue-800 text-gray-900">
+        <div className="h-screen">
           <GameProvider>
             <Screen />
           </GameProvider>

@@ -93,52 +93,43 @@ function Board() {
   )
 }
 
-// const Timeline: FC = () => {
-//   return (
-//     <ul className="timeline w-full">
-//       <li>
-//         <div className="timeline-start w-24"></div>
-//         <div className="timeline-middle">
-//           <CheckCircleIcon className="size-12" />
-//         </div>
-//         <hr className="bg-primary" />
-//       </li>
-//       <li>
-//         <hr className="bg-primary" />
-//         <div className="timeline-start w-24"></div>
-//         <div className="timeline-middle">
-//           <CheckCircleIcon className="size-12" />
-//         </div>
-//         <hr className="bg-primary" />
-//       </li>
-//       <li>
-//         <hr className="bg-primary" />
-//         <div className="timeline-start w-24"></div>
-//         <div className="timeline-middle">
-//           <CircleStackIcon className="size-12" />
-//         </div>
-//         <hr />
-//       </li>
-//       <li>
-//         <hr />
-//         <div className="timeline-start w-24"></div>
-//         <div className="timeline-middle">
-//           <CircleStackIcon className="size-12" />
-//         </div>
-//         <hr />
-//       </li>
-//       <li>
-//         <hr />
-//         <div className="timeline-middle">
-//           <CircleStackIcon className="size-12" />
-//         </div>
-//       </li>
-//     </ul>
-//   )
-// }
+const TestStateIndicator: FC = () => {
+  const { testState } = useContext(GameContext)
+  return (
+    <div>
+      <img
+        className={classNames("h-20", { invisible: testState !== "playing" })}
+        src="listening.png"
+        alt="Listen"
+      />
+    </div>
+  )
+}
 
 export const PlayPage: FC = () => {
-  const { setStage } = useContext(GameContext)
+  const { stage, setStage, testState, setTestState, setPlayingIndex, chapter } =
+    useContext(GameContext)
+  const chapterData = useMemo(() => CHAPTER_DATA[chapter], [chapter])
+
+  const runSingleTest = () => {
+    setStage("test")
+    setPlayingIndex(null)
+    setTestState("playing")
+    // pick a random index
+    // const index = Math.floor(Math.random() * chapterData.names.length)
+    const index = 1
+    const id = chapterData.names[index].id
+    const audioElement = document.getElementById(`audio_${id}`)! as HTMLAudioElement
+    audioElement.play()
+    audioElement.onended = () => {
+      console.log("ended")
+      // setTestState("answering")
+      setStage("warmup")
+    }
+  }
+
+  const runSeriesTest = () => {}
+
   return (
     <>
       {/* <div className="absolute inset-x-0 top-4 flex flex-col items-center">
@@ -155,8 +146,13 @@ export const PlayPage: FC = () => {
           "items-center justify-center portrait:flex-col",
         )}
       >
+        <TestStateIndicator />
         <Board />
-        <div className="flex items-center justify-center">
+        <div
+          className={classNames("flex items-center justify-center gap-4", {
+            invisible: stage === "test" && ["playing", "answering"].includes(testState),
+          })}
+        >
           {/* {stage === "warmup" &&
             DIFFICULTIES.map((difficulty) => (
               <button
@@ -175,10 +171,13 @@ export const PlayPage: FC = () => {
               <Timeline />
             </>
           )} */}
-          <button
-            className="badge bg-blue-950 p-8 text-3xl text-white"
-            onClick={() => setStage("lobby")}
-          >
+          <button className="btn btn-primary" onClick={runSingleTest}>
+            Test
+          </button>
+          <button className="btn btn-primary" onClick={runSeriesTest}>
+            Series
+          </button>
+          <button className="btn btn-primary" onClick={() => setStage("lobby")}>
             Vissza!
           </button>
         </div>
