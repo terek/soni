@@ -1,6 +1,6 @@
 import { FC, StrictMode, useContext } from "react"
 
-import { GameContext, GameProvider, PLAY_STAGES, PlayStage, Stage } from "./GameContext"
+import { GameContext, GameProvider } from "./GameContext"
 import { LobbyPage } from "./LobbyPage"
 import { PlayPage } from "./PlayPage"
 
@@ -42,7 +42,7 @@ const Screen: FC<{}> = () => {
   return (
     <>
       {stage === "lobby" && <LobbyPage />}
-      {PLAY_STAGES.includes(stage as PlayStage) && <PlayPage />}
+      {stage === "play" && <PlayPage />}
       {stage === "result" && <ResultPage />}
     </>
   )

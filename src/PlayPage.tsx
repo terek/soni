@@ -6,95 +6,51 @@ import { FC, useContext, useMemo, useState } from "react"
 import { GameContext } from "./GameContext"
 import { Chapter, CHAPTER_DATA } from "./levels"
 
-function ImageButton({
+type BorderState = "selected" | "correct" | "wrong" | null
+
+function Card({
   chapter,
-  index,
-  selected,
+  imageId,
+  audioId,
+  borderState,
   onClick,
+  onEndPlaying,
 }: {
   chapter: Chapter
-  index: number
-  selected: boolean
+  imageId: number
+  audioId: string
+  borderState: BorderState
   onClick: () => void
+  onEndPlaying?: () => void
 }) {
-  const indexStr = useMemo(() => index.toString().padStart(2, "0"), [index])
+  const indexStr = useMemo(() => imageId.toString().padStart(2, "0"), [imageId])
   return (
-    <img
-      className={classNames(
-        "box-border rounded-xl border-4 bg-blue-900 text-3xl text-blue-200",
-        {
-          "border-red-500": selected,
-          "border-transparent": !selected,
-        },
-      )}
-      src={`tiles/${chapter}/${indexStr}.jpg`}
-      onClick={onClick}
-    />
-
-    // <div
-    //   className={classNames(
-    //     "mask mask-squircle flex aspect-square items-center justify-center",
-    //     "nunito-800 bg-rose-500 text-6xl text-white",
-    //   )}
-    //   onClick={() => onClick(value)}
-    // >
-    //   {value}
-    // </div>
-  )
-}
-
-function Board() {
-  const { chapter } = useContext(GameContext)
-  const chapterData = useMemo(() => CHAPTER_DATA[chapter], [chapter])
-  const [currentPlaying, setCurrentPlaying] = useState<number | null>(null)
-  const startPlaying = (index: number) => {
-    if (currentPlaying !== null) {
-      const id = chapterData.names[currentPlaying].id
-      const audioElement = document.getElementById(`audio_${id}`)! as HTMLAudioElement
-      audioElement.pause()
-    }
-    setCurrentPlaying(index)
-    const id = chapterData.names[index].id
-    const audioElement = document.getElementById(`audio_${id}`)! as HTMLAudioElement
-    audioElement.play()
-  }
-  const endPlaying = (_index: number) => {
-    setCurrentPlaying(null)
-  }
-  return (
-    <div className="flex flex-col items-center justify-start bg-blue-800">
-      <div
+    <>
+      <img
         className={classNames(
-          "m-0",
-          "portrait:w-full portrait:max-w-[40rem]",
-          "landscape:h-full landscape:w-[40rem]",
-          `grid place-items-stretch gap-2 ${chapterData.classNames}`,
+          "box-border rounded-xl border-4 bg-blue-900 text-3xl text-blue-200",
+          {
+            "border-blue-500": borderState === "selected",
+            "border-red-500": borderState === "wrong",
+            "border-green-500": borderState === "correct",
+            "border-transparent": borderState === null,
+          },
         )}
-      >
-        {Array.from({ length: chapterData.numRows * chapterData.numCols }).map(
-          (_, i) => (
-            <div key={i}>
-              <ImageButton
-                chapter={chapter}
-                index={i}
-                selected={currentPlaying === i}
-                onClick={() => startPlaying(i)}
-              />
-              <audio
-                id={`audio_${chapterData.names[i].id}`}
-                src={`sounds/${chapter}/${chapterData.names[i].id}.ogg`}
-                onEnded={() => endPlaying(i)}
-              />
-            </div>
-          ),
-        )}
-      </div>
-    </div>
+        src={`tiles/${chapter}/${indexStr}.jpg`}
+        onClick={onClick}
+      />
+      <audio
+        id={`audio_${audioId}`}
+        src={`sounds/${chapter}/${audioId}.ogg`}
+        onEnded={onEndPlaying}
+      />
+    </>
   )
 }
 
 const TestStateIndicator: FC = () => {
-  const { testState } = useContext(GameContext)
+  // const { testState } = useContext(GameContext)'
+  const testState = "playing"
   return (
     <div>
       <img
@@ -107,28 +63,80 @@ const TestStateIndicator: FC = () => {
 }
 
 export const PlayPage: FC = () => {
-  const { stage, setStage, testState, setTestState, setPlayingIndex, chapter } =
-    useContext(GameContext)
-  const chapterData = useMemo(() => CHAPTER_DATA[chapter], [chapter])
+  console.log("PlayPage")
+  type TestState = "playing" | "answering" | "correct" | "wrong"
+  const [playStage, setPlayStage] = useState<"warmup" | "test" | "result">("warmup")
+  const [testState, setTestState] = useState<TestState>("playing")
+  // const [playingIndex, setPlayingIndex] = useState<number | null>(null)
 
-  const runSingleTest = () => {
-    setStage("test")
-    setPlayingIndex(null)
-    setTestState("playing")
-    // pick a random index
-    // const index = Math.floor(Math.random() * chapterData.names.length)
-    const index = 1
-    const id = chapterData.names[index].id
-    const audioElement = document.getElementById(`audio_${id}`)! as HTMLAudioElement
-    audioElement.play()
-    audioElement.onended = () => {
-      console.log("ended")
-      // setTestState("answering")
-      setStage("warmup")
+  const { stage, setStage } = useContext(GameContext)
+  // const chapterData = useMemo(() => CHAPTER_DATA[chapter], [chapter])
+
+  // const runSingleTest = () => {
+  //   setPlayStage("test")
+  //   setPlayingIndex(null)
+  //   setTestState("playing")
+  //   // pick a random index
+  //   // const index = Math.floor(Math.random() * chapterData.names.length)
+  //   const index = 1
+  //   const id = chapterData.names[index].id
+  //   const audioElement = document.getElementById(`audio_${id}`)! as HTMLAudioElement
+  //   audioElement.play()
+  //   audioElement.onended = () => {
+  //     console.log("ended")
+  //     // setTestState("answering")
+  //     setPlayStage("warmup")
+  //   }
+  // }
+
+  const runSingleTest = () => {}
+  const runSeriesTest = () => {}
+
+  const { chapter } = useContext(GameContext)
+  const chapterData = useMemo(() => CHAPTER_DATA[chapter], [chapter])
+  const audioIds = useMemo(
+    () => chapterData.names.map((name) => `audio_${name.id}`),
+    [chapterData],
+  )
+
+  // Warmup, Try and Test logic
+  // In warmup, the user can listen to the audio by clicking on the card
+  // In try, the user hears the audio and then has to select the correct card
+  // In test, the user listens to multiple series of audio and has to select the cards
+  // in the correct order in each step.
+
+  type States = "waiting" | "warmup:listen" | "try:listen" | "try:result"
+  const [state, setState] = useState<States>("waiting")
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
+  const [tryPlayedIndex, setTryPlayedIndex] = useState<number | null>(null)
+  const [tryPickedIndex, setTryPickedIndex] = useState<number | null>(null)
+
+  // const [currentPlaying, setCurrentPlaying] = useState<number | null>(null)
+  // const startPlaying = (index: number) => {
+  //   if (currentPlaying !== null) {
+  //     const id = chapterData.names[currentPlaying].id
+  //     const audioElement = document.getElementById(`audio_${id}`)! as HTMLAudioElement
+  //     audioElement.pause()
+  //   }
+  //   setCurrentPlaying(index)
+  //   const id = chapterData.names[index].id
+  //   const audioElement = document.getElementById(`audio_${id}`)! as HTMLAudioElement
+  //   audioElement.play()
+  // }
+
+  const onCardClicked = (index: number) => {
+    // Is clicking allowed?
+    if (state === "warmup:listen") {
+      // Stop the currently playing audio
+    }
+    if (state === "waiting") {
+      return
+    } else {
     }
   }
-
-  const runSeriesTest = () => {}
+  const onEndPlaying = (index: number) => {
+    // setCurrentPlaying(null)
+  }
 
   return (
     <>
@@ -147,10 +155,49 @@ export const PlayPage: FC = () => {
         )}
       >
         <TestStateIndicator />
-        <Board />
+        {/* Board */}
+        <div className="flex flex-col items-center justify-start bg-blue-800">
+          <div
+            className={classNames(
+              "m-0",
+              "portrait:w-full portrait:max-w-[40rem]",
+              "landscape:h-full landscape:w-[40rem]",
+              `grid place-items-stretch gap-2 ${chapterData.classNames}`,
+            )}
+          >
+            {chapterData.names.map((name, index) => (
+              <div key={index}>
+                <Card
+                  chapter={chapter}
+                  imageId={index}
+                  audioId={name.id}
+                  borderState={
+                    state == "warmup:listen" && selectedIndex == index
+                      ? "selected"
+                      : state == "try:result"
+                        ? tryPlayedIndex == tryPickedIndex
+                          ? tryPickedIndex == index
+                            ? "correct"
+                            : null
+                          : tryPickedIndex == index
+                            ? "wrong"
+                            : tryPlayedIndex == index
+                              ? "correct"
+                              : null
+                        : null
+                  }
+                  onClick={() => onCardClicked(index)}
+                  onEndPlaying={() => onEndPlaying(index)}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+        {/* Controls */}
         <div
           className={classNames("flex items-center justify-center gap-4", {
-            invisible: stage === "test" && ["playing", "answering"].includes(testState),
+            invisible:
+              playStage === "test" && ["playing", "answering"].includes(testState),
           })}
         >
           {/* {stage === "warmup" &&

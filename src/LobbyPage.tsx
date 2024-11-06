@@ -40,7 +40,7 @@ export const LobbyPage: FC = () => {
           className="badge bg-blue-950 p-8 text-3xl text-white"
           onClick={() => {
             setChapter(chapter)
-            setStage("warmup")
+            setStage("play")
           }}
         >
           {chapter}
