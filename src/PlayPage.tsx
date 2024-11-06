@@ -1,50 +1,52 @@
 // import { CheckCircleIcon, CircleStackIcon } from "@heroicons/react/24/solid"
 
 import classNames from "classnames"
-import { FC, useContext, useMemo, useState } from "react"
+import { motion } from "framer-motion"
+import { FC, useMemo, useState } from "react"
+import { useNavigate, useParams } from "react-router-dom"
 
-import { GameContext } from "./GameContext"
 import { Chapter, CHAPTER_DATA } from "./levels"
+
+import {
+  PaperAirplaneIcon,
+  PlayCircleIcon,
+  RocketLaunchIcon,
+  SunIcon,
+} from "@heroicons/react/24/solid"
 
 type BorderState = "selected" | "correct" | "wrong" | null
 
 function Card({
   chapter,
   imageId,
-  audioId,
   borderState,
   onClick,
-  onEndPlaying,
 }: {
   chapter: Chapter
   imageId: number
-  audioId: string
   borderState: BorderState
   onClick: () => void
-  onEndPlaying?: () => void
 }) {
   const indexStr = useMemo(() => imageId.toString().padStart(2, "0"), [imageId])
   return (
-    <>
-      <img
-        className={classNames(
-          "box-border rounded-xl border-4 bg-blue-900 text-3xl text-blue-200",
-          {
-            "border-blue-500": borderState === "selected",
-            "border-red-500": borderState === "wrong",
-            "border-green-500": borderState === "correct",
-            "border-transparent": borderState === null,
-          },
-        )}
-        src={`tiles/${chapter}/${indexStr}.jpg`}
-        onClick={onClick}
-      />
-      <audio
-        id={`audio_${audioId}`}
-        src={`sounds/${chapter}/${audioId}.ogg`}
-        onEnded={onEndPlaying}
-      />
-    </>
+    <motion.img
+      whileTap={{
+        scale: 0.8,
+        rotate: -30,
+        borderRadius: "100%",
+      }}
+      className={classNames(
+        "box-border rounded-xl border-4 text-3xl text-blue-200 shadow-xl",
+        {
+          "border-blue-500": borderState === "selected",
+          "border-red-500": borderState === "wrong",
+          "border-green-500": borderState === "correct",
+          "border-transparent": borderState === null,
+        },
+      )}
+      src={`/tiles/${chapter}/${indexStr}.jpg`}
+      onClick={onClick}
+    />
   )
 }
 
@@ -55,22 +57,84 @@ const TestStateIndicator: FC = () => {
     <div>
       <img
         className={classNames("h-20", { invisible: testState !== "playing" })}
-        src="listening.png"
+        src="/listening.png"
         alt="Listen"
       />
     </div>
   )
 }
 
-export const PlayPage: FC = () => {
-  console.log("PlayPage")
-  type TestState = "playing" | "answering" | "correct" | "wrong"
-  const [playStage, setPlayStage] = useState<"warmup" | "test" | "result">("warmup")
-  const [testState, setTestState] = useState<TestState>("playing")
-  // const [playingIndex, setPlayingIndex] = useState<number | null>(null)
+type Mode = "warmup" | "try" | "test"
 
-  const { stage, setStage } = useContext(GameContext)
-  // const chapterData = useMemo(() => CHAPTER_DATA[chapter], [chapter])
+const BottomNavigation: FC<{
+  disabled: boolean
+  mode: Mode
+  onModeChanged: (mode: Mode) => void
+}> = ({ disabled, mode, onModeChanged }) => {
+  const ACTIVE_CLASSES = "active bg-primary text-white"
+  return (
+    <div className="btm-nav">
+      <button
+        disabled={disabled}
+        className={classNames(mode === "warmup" ? ACTIVE_CLASSES : "bg-blue-100")}
+        onClick={() => onModeChanged("warmup")}
+      >
+        <SunIcon className="size-6" />
+        <span className="btm-nav-label">Get</span>
+      </button>
+      <button
+        disabled={disabled}
+        className={classNames(mode === "try" ? ACTIVE_CLASSES : "bg-blue-100")}
+        onClick={() => onModeChanged("try")}
+      >
+        <PaperAirplaneIcon className="size-6" />
+        <span className="btm-nav-label">Set</span>
+      </button>
+      <button
+        disabled={disabled}
+        className={classNames(mode === "test" ? ACTIVE_CLASSES : "bg-blue-100")}
+        onClick={() => onModeChanged("test")}
+      >
+        <RocketLaunchIcon className="size-6" />
+        <span className="btm-nav-label">Go!</span>
+      </button>
+    </div>
+  )
+}
+
+export const PlayPage: FC = () => {
+  const navigate = useNavigate()
+  const params = useParams<{ chapter: string; mode: string }>()
+  const [navigationDisabled, setNavigationDisabled] = useState(false)
+
+  // TODO: Get rid of chapter from GameContext.
+  // const { chapter } = useContext(GameContext)
+
+  // if (!params.chapter || !Object.keys(CHAPTER_DATA).includes(params.chapter)) {
+  //   return <div>Invalid page</div>
+  // }
+  const startPlaying = (index: number) => {
+    const id = chapterData.names[index].id
+    const audioElement = document.getElementById(`audio_${id}`)! as HTMLAudioElement
+    audioElement.play()
+  }
+
+  const stopPlaying = (index: number) => {
+    const id = chapterData.names[index].id
+    const audioElement = document.getElementById(`audio_${id}`)! as HTMLAudioElement
+    audioElement.pause()
+    audioElement.currentTime = 0
+  }
+
+  const chapter = params.chapter as Chapter
+  const mode = params.mode as Mode
+  const chapterData = useMemo(() => CHAPTER_DATA[chapter], [chapter])
+
+  const [currentPlaying, setCurrentPlaying] = useState<number | null>(null)
+
+  type TestState = "playing" | "answering" | "correct" | "wrong"
+
+  // const [playingIndex, setPlayingIndex] = useState<number | null>(null)
 
   // const runSingleTest = () => {
   //   setPlayStage("test")
@@ -89,53 +153,69 @@ export const PlayPage: FC = () => {
   //   }
   // }
 
-  const runSingleTest = () => {}
-  const runSeriesTest = () => {}
-
-  const { chapter } = useContext(GameContext)
-  const chapterData = useMemo(() => CHAPTER_DATA[chapter], [chapter])
-  const audioIds = useMemo(
-    () => chapterData.names.map((name) => `audio_${name.id}`),
-    [chapterData],
-  )
-
   // Warmup, Try and Test logic
   // In warmup, the user can listen to the audio by clicking on the card
   // In try, the user hears the audio and then has to select the correct card
   // In test, the user listens to multiple series of audio and has to select the cards
   // in the correct order in each step.
 
-  type States = "waiting" | "warmup:listen" | "try:listen" | "try:result"
-  const [state, setState] = useState<States>("waiting")
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
+  // const [selectedIndex, _setSelectedIndex] = useState<number | null>(null)
   const [tryPlayedIndex, setTryPlayedIndex] = useState<number | null>(null)
   const [tryPickedIndex, setTryPickedIndex] = useState<number | null>(null)
 
-  // const [currentPlaying, setCurrentPlaying] = useState<number | null>(null)
-  // const startPlaying = (index: number) => {
-  //   if (currentPlaying !== null) {
-  //     const id = chapterData.names[currentPlaying].id
-  //     const audioElement = document.getElementById(`audio_${id}`)! as HTMLAudioElement
-  //     audioElement.pause()
-  //   }
-  //   setCurrentPlaying(index)
-  //   const id = chapterData.names[index].id
-  //   const audioElement = document.getElementById(`audio_${id}`)! as HTMLAudioElement
-  //   audioElement.play()
-  // }
-
   const onCardClicked = (index: number) => {
-    // Is clicking allowed?
-    if (state === "warmup:listen") {
-      // Stop the currently playing audio
+    if (currentPlaying !== null) {
+      stopPlaying(currentPlaying)
+      onEndPlaying(currentPlaying)
     }
-    if (state === "waiting") {
-      return
-    } else {
+    if (mode === "warmup") {
+      setNavigationDisabled(true)
+      setCurrentPlaying(index)
+      startPlaying(index)
+    } else if (mode === "try") {
+      if (tryPlayedIndex !== null && tryPickedIndex === null) {
+        setNavigationDisabled(false)
+        setTryPickedIndex(index)
+      }
+    } else if (mode === "test") {
     }
   }
+
+  const startTry = () => {
+    setNavigationDisabled(true)
+    // Pick a random index
+    const index = Math.floor(Math.random() * chapterData.names.length)
+    setTryPlayedIndex(index)
+    setTryPickedIndex(null)
+    setCurrentPlaying(index)
+    startPlaying(index)
+  }
+
   const onEndPlaying = (index: number) => {
-    // setCurrentPlaying(null)
+    setNavigationDisabled(false)
+    setCurrentPlaying(null)
+    if (mode === "try") {
+      setTryPlayedIndex(index)
+    }
+  }
+
+  const borderState = (index: number): BorderState => {
+    if (mode === "warmup") {
+      return currentPlaying === index ? "selected" : null
+    }
+    if (mode === "try") {
+      if (tryPickedIndex === null) {
+        return null
+      }
+      if (tryPickedIndex === index) {
+        return tryPlayedIndex === index ? "correct" : "wrong"
+      }
+      if (tryPlayedIndex === index) {
+        return "correct"
+      }
+      return null
+    }
+    return null
   }
 
   return (
@@ -148,86 +228,70 @@ export const PlayPage: FC = () => {
           Chapter 1
         </button>
       </div> */}
+      <div>
+        {chapterData.names.map((audioId, index) => (
+          <audio
+            key={audioId.id}
+            id={`audio_${audioId.id}`}
+            src={`/sounds/${chapter}/${audioId.id}.ogg`}
+            onEnded={() => onEndPlaying(index)}
+          />
+        ))}
+      </div>
       <div
         className={classNames(
-          "flex h-full gap-4",
+          "grid h-full grid-cols-1 grid-rows-[auto_1fr_auto_auto]",
           "items-center justify-center portrait:flex-col",
         )}
       >
-        <TestStateIndicator />
+        <div className="h-8 w-full bg-green-800"></div>
+        {/* Controls */}
+        <div className="flex items-center justify-between px-2 py-2">
+          {mode == "try" &&
+            currentPlaying === null &&
+            (tryPlayedIndex === null) == (tryPickedIndex === null) && (
+              <div className="flex w-full items-center justify-center">
+                <button
+                  onClick={() => {
+                    startTry()
+                  }}
+                >
+                  <PlayCircleIcon className="size-48 rounded-full border-2 border-black bg-black text-yellow-500 blur-none drop-shadow-xl" />
+                </button>
+              </div>
+            )}
+        </div>
         {/* Board */}
-        <div className="flex flex-col items-center justify-start bg-blue-800">
+        <div className="relative mb-16 flex flex-col items-center justify-start">
           <div
             className={classNames(
-              "m-0",
+              "m-0 overflow-clip px-2 py-2",
               "portrait:w-full portrait:max-w-[40rem]",
               "landscape:h-full landscape:w-[40rem]",
               `grid place-items-stretch gap-2 ${chapterData.classNames}`,
+              { "blur-sm": mode === "try" && tryPlayedIndex === null },
             )}
           >
-            {chapterData.names.map((name, index) => (
+            {chapterData.names.map((_, index) => (
               <div key={index}>
                 <Card
                   chapter={chapter}
                   imageId={index}
-                  audioId={name.id}
-                  borderState={
-                    state == "warmup:listen" && selectedIndex == index
-                      ? "selected"
-                      : state == "try:result"
-                        ? tryPlayedIndex == tryPickedIndex
-                          ? tryPickedIndex == index
-                            ? "correct"
-                            : null
-                          : tryPickedIndex == index
-                            ? "wrong"
-                            : tryPlayedIndex == index
-                              ? "correct"
-                              : null
-                        : null
-                  }
+                  borderState={borderState(index)}
                   onClick={() => onCardClicked(index)}
-                  onEndPlaying={() => onEndPlaying(index)}
                 />
               </div>
             ))}
           </div>
         </div>
-        {/* Controls */}
-        <div
-          className={classNames("flex items-center justify-center gap-4", {
-            invisible:
-              playStage === "test" && ["playing", "answering"].includes(testState),
-          })}
-        >
-          {/* {stage === "warmup" &&
-            DIFFICULTIES.map((difficulty) => (
-              <button
-                key={difficulty}
-                className="badge bg-blue-950 p-8 text-3xl text-white"
-                onClick={() => {
-                  setStage("play")
-                  setDifficulty(difficulty)
-                }}
-              >
-                {difficulty}
-              </button>
-            ))}
-          {stage === "play" && (
-            <>
-              <Timeline />
-            </>
-          )} */}
-          <button className="btn btn-primary" onClick={runSingleTest}>
-            Test
-          </button>
-          <button className="btn btn-primary" onClick={runSeriesTest}>
-            Series
-          </button>
-          <button className="btn btn-primary" onClick={() => setStage("lobby")}>
-            Vissza!
-          </button>
-        </div>
+
+        <BottomNavigation
+          disabled={navigationDisabled}
+          mode={mode}
+          onModeChanged={(mode: Mode) =>
+            navigate(`/play/${chapter}/${mode}`, { replace: true })
+          }
+        />
       </div>
     </>
   )

@@ -1,4 +1,5 @@
 import { FC, useContext } from "react"
+import { useNavigate } from "react-router-dom"
 
 import { GameContext } from "./GameContext"
 import { getChapters } from "./levels"
@@ -29,7 +30,7 @@ const DifficultyControl = () => {
 }
 
 export const LobbyPage: FC = () => {
-  const { setStage, setChapter } = useContext(GameContext)
+  const navigate = useNavigate()
   return (
     <div className="flex h-full flex-col items-center justify-center gap-8">
       <div className="mb-8 text-5xl text-yellow-400">Sonic</div>
@@ -39,8 +40,7 @@ export const LobbyPage: FC = () => {
           key={chapter}
           className="badge bg-blue-950 p-8 text-3xl text-white"
           onClick={() => {
-            setChapter(chapter)
-            setStage("play")
+            navigate(`/play/${chapter}/warmup`)
           }}
         >
           {chapter}
