@@ -50,19 +50,19 @@ function Card({
   )
 }
 
-const TestStateIndicator: FC = () => {
-  // const { testState } = useContext(GameContext)'
-  const testState = "playing"
-  return (
-    <div>
-      <img
-        className={classNames("h-20", { invisible: testState !== "playing" })}
-        src="/listening.png"
-        alt="Listen"
-      />
-    </div>
-  )
-}
+// const TestStateIndicator: FC = () => {
+//   // const { testState } = useContext(GameContext)'
+//   const testState = "playing"
+//   return (
+//     <div>
+//       <img
+//         className={classNames("h-20", { invisible: testState !== "playing" })}
+//         src="/listening.png"
+//         alt="Listen"
+//       />
+//     </div>
+//   )
+// }
 
 type Mode = "warmup" | "try" | "test"
 
@@ -107,9 +107,6 @@ export const PlayPage: FC = () => {
   const params = useParams<{ chapter: string; mode: string }>()
   const [navigationDisabled, setNavigationDisabled] = useState(false)
 
-  // TODO: Get rid of chapter from GameContext.
-  // const { chapter } = useContext(GameContext)
-
   // if (!params.chapter || !Object.keys(CHAPTER_DATA).includes(params.chapter)) {
   //   return <div>Invalid page</div>
   // }
@@ -132,34 +129,6 @@ export const PlayPage: FC = () => {
 
   const [currentPlaying, setCurrentPlaying] = useState<number | null>(null)
 
-  type TestState = "playing" | "answering" | "correct" | "wrong"
-
-  // const [playingIndex, setPlayingIndex] = useState<number | null>(null)
-
-  // const runSingleTest = () => {
-  //   setPlayStage("test")
-  //   setPlayingIndex(null)
-  //   setTestState("playing")
-  //   // pick a random index
-  //   // const index = Math.floor(Math.random() * chapterData.names.length)
-  //   const index = 1
-  //   const id = chapterData.names[index].id
-  //   const audioElement = document.getElementById(`audio_${id}`)! as HTMLAudioElement
-  //   audioElement.play()
-  //   audioElement.onended = () => {
-  //     console.log("ended")
-  //     // setTestState("answering")
-  //     setPlayStage("warmup")
-  //   }
-  // }
-
-  // Warmup, Try and Test logic
-  // In warmup, the user can listen to the audio by clicking on the card
-  // In try, the user hears the audio and then has to select the correct card
-  // In test, the user listens to multiple series of audio and has to select the cards
-  // in the correct order in each step.
-
-  // const [selectedIndex, _setSelectedIndex] = useState<number | null>(null)
   const [tryPlayedIndex, setTryPlayedIndex] = useState<number | null>(null)
   const [tryPickedIndex, setTryPickedIndex] = useState<number | null>(null)
 

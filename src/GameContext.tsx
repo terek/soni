@@ -1,4 +1,4 @@
-import { createContext, FC, PropsWithChildren, useState } from "react"
+import { createContext, FC, PropsWithChildren } from "react"
 import { useLocalStorage } from "usehooks-ts"
 
 export const DIFFICULTIES = ["easy", "medium", "hard"] as const
