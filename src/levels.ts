@@ -59,9 +59,9 @@ export const CHAPTER_DATA: Record<Chapter, ChapterData> = {
       "portrait:grid-cols-3 portrait:grid-rows-4 landscape:grid-cols-4 landscape:grid-rows-3",
     names: [
       { id: "kakas", name: "kakas" },
+      { id: "tyuk", name: "tyúk" },
       { id: "kacsa", name: "kacsa" },
       { id: "liba", name: "liba" },
-      { id: "tyuk", name: "tyúk" },
       { id: "pulyka", name: "pulyka" },
       { id: "bagoly", name: "bagoly" },
       { id: "golya", name: "gólya" },
