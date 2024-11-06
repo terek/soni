@@ -14,7 +14,7 @@
 }
 
 #root {
-  @apply grid h-full portrait:grid-rows-[1fr,2fr] landscape:grid-rows-[3fr,4fr];
+  @apply grid h-dvh portrait:grid-rows-[1fr,2fr] landscape:grid-rows-[3fr,4fr];
 }
 
 body {

@@ -209,7 +209,7 @@ export const PlayPage: FC = () => {
       </div>
       <div
         className={classNames(
-          "grid h-full grid-cols-1 grid-rows-[auto_1fr_auto_auto]",
+          "grid h-dvh grid-cols-1 grid-rows-[auto_1fr_auto_auto]",
           "items-center justify-center portrait:flex-col",
         )}
       >
@@ -236,7 +236,7 @@ export const PlayPage: FC = () => {
             className={classNames(
               "m-0 overflow-clip px-2 py-2",
               "portrait:w-full portrait:max-w-[40rem]",
-              "landscape:h-full landscape:w-[40rem]",
+              "landscape:h-dvh landscape:w-[40rem]",
               `grid place-items-stretch gap-2 ${chapterData.classNames}`,
               { "blur-sm": mode === "try" && tryPlayedIndex === null },
             )}

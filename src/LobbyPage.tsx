@@ -32,7 +32,7 @@ const DifficultyControl = () => {
 export const LobbyPage: FC = () => {
   const navigate = useNavigate()
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-8">
+    <div className="flex h-dvh flex-col items-center justify-center gap-8">
       <div className="mb-8 text-5xl text-yellow-400">Sonic</div>
       {/* <div className="text-3xl">Choose a chapter to play</div> */}
       {getChapters().map((chapter) => (
