@@ -11,7 +11,7 @@
     "preview": "vite preview",
     "prettier": "prettier --write \"./src/**/*.{html,css,ts,tsx}\"",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d dist --cname soni.fun"
   },
   "dependencies": {
     "@heroicons/react": "^2.1.5",
