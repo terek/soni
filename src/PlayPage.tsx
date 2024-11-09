@@ -5,18 +5,18 @@ import { loadConfettiPreset } from "@tsparticles/preset-confetti"
 import Particles, { initParticlesEngine } from "@tsparticles/react"
 import classNames from "classnames"
 import { motion } from "framer-motion"
-import { BrainCircuit, Ear, RotateCcw, Target, Trophy } from "lucide-react"
+import {
+  AudioWaveformIcon,
+  BrainCircuitIcon,
+  EarIcon,
+  PlayIcon,
+  RotateCcwIcon,
+  TargetIcon,
+} from "lucide-react"
 import { FC, useEffect, useMemo, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 
 import { Chapter, CHAPTER_DATA } from "./levels"
-
-import {
-  // PaperAirplaneIcon,
-  PlayCircleIcon,
-  // RocketLaunchIcon,
-  // SunIcon,
-} from "@heroicons/react/24/solid"
 
 type BorderState = "selected" | "correct" | "wrong" | null
 
@@ -98,7 +98,7 @@ const BottomNavigation: FC<{
         onClick={() => onModeChanged("explore")}
       >
         {/* <SunIcon className="size-6" /> */}
-        <Ear className="size-6" />
+        <EarIcon className="size-6" />
         <span className="btm-nav-label">Explore</span>
       </button>
       <button
@@ -107,7 +107,7 @@ const BottomNavigation: FC<{
         onClick={() => onModeChanged("practice")}
       >
         {/* <PaperAirplaneIcon className="size-6" /> */}
-        <Target className="size-6" />
+        <TargetIcon className="size-6" />
         <span className="btm-nav-label">Practice</span>
       </button>
       <button
@@ -116,7 +116,7 @@ const BottomNavigation: FC<{
         onClick={() => onModeChanged("challenge")}
       >
         {/* <RocketLaunchIcon className="size-6" /> */}
-        <BrainCircuit className="size-6" />
+        <BrainCircuitIcon className="size-6" />
         <span className="btm-nav-label">Challenge</span>
       </button>
     </div>
@@ -140,11 +140,6 @@ function randomPermutation(length: number): Array<number> {
 // - Mistakes explicitly retried
 
 type ModeState = "ready" | "playing" | "picking" | "celebration" | "end"
-type TrialResult =
-  | "correct"
-  | "wrong"
-  // not yet tried
-  | null
 
 export const PlayPage: FC = () => {
   const navigate = useNavigate()
@@ -203,7 +198,10 @@ export const PlayPage: FC = () => {
   const [practicePickedIndex, setPracticePickedIndex] = useState<number | null>(null)
 
   const initializeSingleMode = () => {
-    const length = Math.min(chapterData.names.length, 3)
+    setModeState("ready")
+
+    // const length = Math.min(chapterData.names.length, 1)
+    const length = chapterData.names.length
     const indices = randomPermutation(length)
     setNumOriginalRounds(length)
     setSingleModeRounds(indices)
@@ -311,18 +309,38 @@ export const PlayPage: FC = () => {
         )}
       >
         {/* Nav bar */}
-        <div className="navbar bg-base-200 shadow-sm">
-          <a className="btn btn-ghost text-xl">
-            {singleModeRounds.join(", ")}|{currentRound}/{numOriginalRounds}
-          </a>
+        <div className="navbar flex justify-stretch bg-base-200 shadow-sm">
+          <span className="btn btn-ghost">
+            <AudioWaveformIcon className="size-8" />
+            <a className="text-xl">
+              Soni
+              {/* {singleModeRounds.join(", ")}|{currentRound}/{numOriginalRounds} */}
+            </a>
+          </span>
+          <div className="grow" />
+          <select
+            className="select max-w-xs"
+            value={chapter}
+            onChange={(e) => navigate(`/play/${e.target.value}/${mode}`)}
+          >
+            {Object.keys(CHAPTER_DATA).map((chapter) => (
+              <option key={chapter} value={chapter}>
+                {chapter}
+              </option>
+            ))}
+          </select>
         </div>
 
-        <ProgressBar numSuccesses={numSuccesses} numTotal={numOriginalRounds} />
+        <div
+          className={classNames("my-2 w-full px-2", { invisible: mode === "explore" })}
+        >
+          <ProgressBar numSuccesses={numSuccesses} numTotal={numOriginalRounds} />
+        </div>
 
         {/* Board */}
         <div
           className={classNames(
-            "mb-16 overflow-clip px-2",
+            "overflow-clip-x mb-16 px-2",
             "portrait:w-full portrait:max-w-[40rem]",
             "landscape:h-dvh landscape:w-[40rem]",
             `grid place-items-stretch gap-2 ${chapterData.classNames}`,
@@ -352,22 +370,24 @@ export const PlayPage: FC = () => {
           {mode == "practice" && modeState === "ready" && (
             <div className="flex w-full items-center justify-center">
               <button
+                className="flex size-48 items-center justify-center rounded-full bg-black text-yellow-500 blur-none drop-shadow-xl"
                 onClick={() => {
                   playNextRound()
                 }}
               >
-                <PlayCircleIcon className="size-48 rounded-full border-2 border-black bg-black text-yellow-500 blur-none drop-shadow-xl" />
+                <PlayIcon className="size-36" />
               </button>
             </div>
           )}
           {mode == "practice" && modeState === "end" && (
             <div className="flex w-full items-center justify-center">
               <button
+                className="flex size-48 items-center justify-center rounded-full bg-black text-yellow-500 blur-none drop-shadow-xl"
                 onClick={() => {
                   initializeSingleMode()
                 }}
               >
-                <RotateCcw className="size-48 rounded-full border-2 border-black bg-black text-yellow-500 blur-none drop-shadow-xl" />
+                <RotateCcwIcon className="size-32" />
               </button>
             </div>
           )}
@@ -396,13 +416,11 @@ const ProgressBar: FC<{
   numTotal: number
 }> = ({ numSuccesses, numTotal }) => {
   return (
-    <div className="my-2 w-full px-2">
-      <progress
-        className="progress progress-success rounded-none"
-        value={numSuccesses}
-        max={numTotal}
-      />
-    </div>
+    <progress
+      className="progress progress-success rounded-none"
+      value={numSuccesses}
+      max={numTotal}
+    />
   )
   {
     /*<div className="my-4 flex w-full justify-stretch px-2">

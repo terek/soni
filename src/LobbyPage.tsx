@@ -40,7 +40,7 @@ export const LobbyPage: FC = () => {
           key={chapter}
           className="badge bg-blue-950 p-8 text-3xl text-white"
           onClick={() => {
-            navigate(`/play/${chapter}/warmup`)
+            navigate(`/play/${chapter}/explore`)
           }}
         >
           {chapter}
