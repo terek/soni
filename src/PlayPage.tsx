@@ -12,6 +12,8 @@ import {
   RocketIcon,
   RotateCcwIcon,
   SquareXIcon,
+  ThumbsDownIcon,
+  TrophyIcon,
   Volume2Icon,
 } from "lucide-react"
 import { FC, useEffect, useMemo, useState } from "react"
@@ -135,7 +137,7 @@ export const PlayPage: FC = () => {
 
   const initializeSingleMode = () => {
     setModeState("prepare")
-    const length = Math.min(chapterData.names.length, 1)
+    const length = 2
     // const length = chapterData.names.length
     const indices = randomPermutation(length)
     setNumOriginalRounds(length)
@@ -286,7 +288,7 @@ export const PlayPage: FC = () => {
         {/* Board */}
         <div
           className={classNames(
-            "overflow-clip-x mb-16 px-2",
+            "overflow-clip-x relative mb-16 px-2",
             "portrait:w-full portrait:max-w-[40rem]",
             "landscape:h-dvh landscape:w-[40rem]",
             `grid place-items-stretch gap-2 ${chapterData.classNames}`,
@@ -308,12 +310,30 @@ export const PlayPage: FC = () => {
               onClick={() => onCardClicked(index)}
             />
           ))}
+          {(modeState === "celebration" || modeState == "end") && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="flex flex-col items-center rounded-xl border-8 border-yellow-500 bg-black p-8 text-4xl text-yellow-500">
+                {numFailures > 0 ? (
+                  <>
+                    <ThumbsDownIcon className="size-12" />
+                    <span className="mt-4">{numFailures}</span>
+                  </>
+                ) : (
+                  <TrophyIcon className="size-12" />
+                )}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Controls */}
         <div className="flex h-24 items-center justify-center bg-base-300 px-2 py-2">
           {modeState === "initial" && (
-            <Button onClick={initializeSingleMode}>
+            <Button
+              onClick={() => {
+                initializeSingleMode()
+              }}
+            >
               <RocketIcon className="size-12" />
             </Button>
           )}
