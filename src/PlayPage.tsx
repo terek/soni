@@ -52,10 +52,10 @@ function Card({
       }
       className={classNames(
         "h-full w-full rounded-xl object-cover",
-
         "box-border rounded-xl border-8",
         {
           "shadow-xl": !disabled,
+          "blur-sm": disabled,
           "border-blue-500": borderState === "selected",
           "border-red-500": borderState === "wrong",
           "border-green-500": borderState === "correct",
@@ -89,6 +89,7 @@ type ModeState =
   | "prepare"
   | "playing-practice"
   | "picking"
+  | "playing-feedback"
   | "feedback"
   | "celebration"
   | "end"
@@ -131,14 +132,14 @@ export const PlayPage: FC = () => {
   const [numSuccesses, setNumSuccesses] = useState<number>(0)
   const [numFailures, setNumFailures] = useState<number>(0)
 
-  const [explorePlayingIndex, setExplorePlayingIndex] = useState<number | null>(null)
+  const [adhocPlayingIndex, setAdhocPlayingIndex] = useState<number | null>(null)
   const [practicePlayedIndex, setPracticePlayedIndex] = useState<number | null>(null)
   const [practicePickedIndex, setPracticePickedIndex] = useState<number | null>(null)
 
   const initializeSingleMode = () => {
     setModeState("prepare")
-    const length = 2
-    // const length = chapterData.names.length
+    // const length = 2
+    const length = chapterData.names.length
     const indices = randomPermutation(length)
     setNumOriginalRounds(length)
     setSingleModeRounds(indices)
@@ -148,13 +149,18 @@ export const PlayPage: FC = () => {
   }
 
   const onCardClicked = (index: number) => {
-    if (explorePlayingIndex !== null) {
-      stopPlaying(explorePlayingIndex)
-      onEndPlaying(explorePlayingIndex)
+    if (adhocPlayingIndex !== null) {
+      stopPlaying(adhocPlayingIndex)
+      onEndPlaying(adhocPlayingIndex)
     }
     if (modeState === "initial") {
       setModeState("playing-explore")
-      setExplorePlayingIndex(index)
+      setAdhocPlayingIndex(index)
+      startPlaying(index)
+    }
+    if (modeState === "feedback") {
+      setModeState("playing-feedback")
+      setAdhocPlayingIndex(index)
       startPlaying(index)
     }
     if (modeState === "playing-practice" || modeState === "picking") {
@@ -178,13 +184,19 @@ export const PlayPage: FC = () => {
       setCurrentRound(nextRound)
       if (nextRound < numActualRounds) {
         if (correct) {
-          setModeState("prepare")
+          setModeState("feedback")
           setTimeout(() => {
+            setModeState("prepare")
             setPracticePickedIndex(null)
             setPracticePlayedIndex(null)
-          }, 1000)
+          }, 2000)
         } else {
-          setModeState("feedback")
+          setModeState("playing-feedback")
+          setAdhocPlayingIndex(picked)
+          if (modeState === "playing-practice") {
+            stopPlaying(played)
+          }
+          startPlaying(picked)
         }
       } else {
         setModeState("celebration")
@@ -220,25 +232,40 @@ export const PlayPage: FC = () => {
   const onEndPlaying = (index: number) => {
     if (modeState == "playing-explore") {
       setModeState("initial")
-      setExplorePlayingIndex(null)
+      setAdhocPlayingIndex(null)
     } else if (modeState === "playing-practice") {
       setModeState("picking")
       setPracticePlayedIndex(index)
+    } else if (modeState === "playing-feedback") {
+      setModeState("feedback")
+      setAdhocPlayingIndex(null)
     }
   }
 
   const borderState = (index: number): BorderState => {
-    if (modeState === "playing-explore" && explorePlayingIndex === index) {
+    if (modeState === "playing-explore" && adhocPlayingIndex === index) {
       return "selected"
     }
     if (practicePickedIndex === null) {
       return null
     }
-    if (practicePickedIndex === index) {
-      return practicePlayedIndex === index ? "correct" : "wrong"
+    if (modeState === "playing-feedback") {
+      if (adhocPlayingIndex !== null && adhocPlayingIndex !== index) {
+        return null
+      }
+      if (practicePickedIndex === index && practicePlayedIndex !== index) {
+        return "wrong"
+      } else if (practicePlayedIndex === index) {
+        return "correct"
+      }
     }
-    if (practicePlayedIndex === index) {
-      return "correct"
+    if (modeState === "feedback") {
+      if (practicePlayedIndex === index) {
+        return "correct"
+      }
+      if (practicePickedIndex === index) {
+        return "wrong"
+      }
     }
     return null
   }
@@ -305,8 +332,12 @@ export const PlayPage: FC = () => {
             <Card
               key={index}
               disabled={
-                !["initial", "playing-explore", "playing-practice", "picking"].includes(
-                  modeState,
+                !(
+                  ["initial", "playing-practice", "picking"].includes(modeState) ||
+                  (["playing-explore", "playing-feedback"].includes(modeState) &&
+                    adhocPlayingIndex === index) ||
+                  (modeState === "feedback" &&
+                    (practicePlayedIndex === index || practicePickedIndex === index))
                 )
               }
               chapterId={chapterId}
@@ -348,9 +379,9 @@ export const PlayPage: FC = () => {
               <PlayIcon className="size-12" />
             </Button>
           )}
-          {(modeState === "playing-practice" || modeState === "playing-explore") && (
-            <span className="loading loading-ring loading-md"></span>
-          )}
+          {["playing-explore", "playing-practice", "playing-feedback"].includes(
+            modeState,
+          ) && <span className="loading loading-ring loading-md"></span>}
           {modeState === "picking" && (
             <Button onClick={replaySound}>
               <Volume2Icon className="size-12" />
