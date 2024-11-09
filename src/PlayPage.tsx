@@ -205,6 +205,12 @@ export const PlayPage: FC = () => {
     startPlaying(index)
   }
 
+  const onFeedbackAccepted = () => {
+    setPracticePlayedIndex(null)
+    setPracticePickedIndex(null)
+    setModeState("prepare")
+  }
+
   const replaySound = () => {
     setModeState("playing-practice")
     const index = singleModeRounds[currentRound]
@@ -267,7 +273,7 @@ export const PlayPage: FC = () => {
           <span className="btn btn-ghost">
             <AudioWaveformIcon className="size-8" />
             <a className="text-xl">
-              Soni/{modeState}
+              Soni
               {/* {singleModeRounds.join(", ")}|{currentRound}/{numOriginalRounds} */}
             </a>
           </span>
@@ -351,7 +357,7 @@ export const PlayPage: FC = () => {
             </Button>
           )}
           {modeState === "feedback" && (
-            <Button onClick={playNextRound}>
+            <Button onClick={onFeedbackAccepted}>
               <CheckIcon className="size-12" />
             </Button>
           )}
@@ -380,7 +386,7 @@ const ProgressBar: FC<{
 }> = ({ numSuccesses, numTotal }) => {
   return (
     <progress
-      className="progress progress-success rounded-none"
+      className="progress progress-success"
       value={numSuccesses}
       max={numTotal}
     />
