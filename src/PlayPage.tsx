@@ -11,6 +11,7 @@ import {
   PlayIcon,
   RocketIcon,
   RotateCcwIcon,
+  SquareXIcon,
   Volume2Icon,
 } from "lucide-react"
 import { FC, useEffect, useMemo, useState } from "react"
@@ -105,13 +106,6 @@ export const PlayPage: FC = () => {
     })
   }, [])
 
-  // useEffect(() => {
-  //   resetChapter()
-  // }, [params.chapter])
-
-  // if (!params.chapter || !Object.keys(CHAPTER_DATA).includes(params.chapter)) {
-  //   return <div>Invalid page</div>
-  // }
   const startPlaying = (index: number) => {
     const id = chapterData.names[index].id
     const audioElement = document.getElementById(`audio_${id}`)! as HTMLAudioElement
@@ -141,8 +135,8 @@ export const PlayPage: FC = () => {
 
   const initializeSingleMode = () => {
     setModeState("prepare")
-    // const length = Math.min(chapterData.names.length, 1)
-    const length = chapterData.names.length
+    const length = Math.min(chapterData.names.length, 1)
+    // const length = chapterData.names.length
     const indices = randomPermutation(length)
     setNumOriginalRounds(length)
     setSingleModeRounds(indices)
@@ -241,6 +235,11 @@ export const PlayPage: FC = () => {
     return null
   }
 
+  const showCloseModal = () => {
+    const modal = document.getElementById("close_modal")! as HTMLDialogElement
+    modal.showModal()
+  }
+
   return (
     <>
       {/* Fake node for audio elements. */}
@@ -271,17 +270,9 @@ export const PlayPage: FC = () => {
             </a>
           </span>
           <div className="grow" />
-          <select
-            className="select max-w-xs"
-            value={chapterId}
-            onChange={(e) => navigate(`/play/${e.target.value}`)}
-          >
-            {Object.keys(CHAPTER_DATA).map((chapter) => (
-              <option key={chapter} value={chapter}>
-                {chapter}
-              </option>
-            ))}
-          </select>
+          <button className="btn btn-ghost" onClick={showCloseModal}>
+            <SquareXIcon className="size-8" />
+          </button>
         </div>
 
         <div
@@ -354,6 +345,7 @@ export const PlayPage: FC = () => {
       {initParticles && modeState === "celebration" && (
         <Particles id="tsparticles" options={CONFETTI_OPTIONS} />
       )}
+      <CloseModal onCloseGame={() => navigate("/")} />
     </>
   )
 }
@@ -386,5 +378,24 @@ const Button: FC<{
     >
       {children}
     </button>
+  )
+}
+
+const CloseModal: FC<{ onCloseGame: () => void }> = ({ onCloseGame }) => {
+  return (
+    <dialog id="close_modal" className="modal">
+      <div className="modal-box">
+        <h3 className="text-lg font-bold">Soni</h3>
+        <p className="py-4">Do you want to stop the game?</p>
+        <div className="modal-action">
+          <form method="dialog">
+            <button className="btn bg-base-300">Continue</button>
+            <button className="btn ml-4 bg-base-100" onClick={onCloseGame}>
+              Stop
+            </button>
+          </form>
+        </div>
+      </div>
+    </dialog>
   )
 }
