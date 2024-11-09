@@ -11,6 +11,7 @@ import {
   PlayIcon,
   RocketIcon,
   RotateCcwIcon,
+  Volume2Icon,
 } from "lucide-react"
 import { FC, useEffect, useMemo, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
@@ -182,6 +183,10 @@ export const PlayPage: FC = () => {
       if (nextRound < numActualRounds) {
         if (correct) {
           setModeState("prepare")
+          setTimeout(() => {
+            setPracticePickedIndex(null)
+            setPracticePlayedIndex(null)
+          }, 1000)
         } else {
           setModeState("feedback")
         }
@@ -197,9 +202,15 @@ export const PlayPage: FC = () => {
   }
 
   const playNextRound = () => {
-    setModeState("playing-practice")
     setPracticePlayedIndex(null)
     setPracticePickedIndex(null)
+    setModeState("playing-practice")
+    const index = singleModeRounds[currentRound]
+    startPlaying(index)
+  }
+
+  const replaySound = () => {
+    setModeState("playing-practice")
     const index = singleModeRounds[currentRound]
     startPlaying(index)
   }
@@ -311,46 +322,32 @@ export const PlayPage: FC = () => {
         {/* Controls */}
         <div className="flex h-24 items-center justify-center bg-base-300 px-2 py-2">
           {modeState === "initial" && (
-            <button
-              className="flex size-20 items-center justify-center rounded-full bg-black text-yellow-500 blur-none drop-shadow-xl"
-              onClick={() => {
-                initializeSingleMode()
-              }}
-            >
+            <Button onClick={initializeSingleMode}>
               <RocketIcon className="size-16" />
-            </button>
+            </Button>
           )}
-
           {modeState === "prepare" && (
-            <button
-              className="flex size-20 items-center justify-center rounded-full bg-black text-yellow-500 blur-none drop-shadow-xl"
-              onClick={() => {
-                playNextRound()
-              }}
-            >
+            <Button onClick={playNextRound}>
               <PlayIcon className="size-16" />
-            </button>
+            </Button>
           )}
-
+          {(modeState === "playing-practice" || modeState === "playing-explore") && (
+            <span className="loading loading-ring loading-md"></span>
+          )}
+          {modeState === "picking" && (
+            <Button onClick={replaySound}>
+              <Volume2Icon className="size-16" />
+            </Button>
+          )}
           {modeState === "feedback" && (
-            <button
-              className="flex size-20 items-center justify-center rounded-full bg-black text-yellow-500 blur-none drop-shadow-xl"
-              onClick={() => {
-                playNextRound()
-              }}
-            >
+            <Button onClick={playNextRound}>
               <CheckIcon className="size-16" />
-            </button>
+            </Button>
           )}
           {modeState === "end" && (
-            <button
-              className="flex size-20 items-center justify-center rounded-full bg-black text-yellow-500 blur-none drop-shadow-xl"
-              onClick={() => {
-                initializeSingleMode()
-              }}
-            >
+            <Button onClick={initializeSingleMode}>
               <RotateCcwIcon className="size-16" />
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -375,5 +372,19 @@ const ProgressBar: FC<{
       value={numSuccesses}
       max={numTotal}
     />
+  )
+}
+
+const Button: FC<{
+  onClick: () => void
+  children: React.ReactNode
+}> = ({ onClick, children }) => {
+  return (
+    <button
+      className="flex size-20 items-center justify-center rounded-full bg-black text-yellow-500 blur-none drop-shadow-xl"
+      onClick={onClick}
+    >
+      {children}
+    </button>
   )
 }
