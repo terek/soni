@@ -7,29 +7,28 @@ import classNames from "classnames"
 import { motion } from "framer-motion"
 import {
   AudioWaveformIcon,
-  BrainCircuitIcon,
-  EarIcon,
+  CheckIcon,
   PlayIcon,
+  RocketIcon,
   RotateCcwIcon,
-  TargetIcon,
 } from "lucide-react"
 import { FC, useEffect, useMemo, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 
-import { Chapter, CHAPTER_DATA } from "./levels"
+import { CHAPTER_DATA } from "./levels"
 
 type BorderState = "selected" | "correct" | "wrong" | null
 
 function Card({
   disabled,
-  chapter,
+  chapterId,
   imageId,
   title,
   borderState,
   onClick,
 }: {
   disabled: boolean
-  chapter: Chapter
+  chapterId: string
   imageId: number
   title: string
   borderState: BorderState
@@ -61,65 +60,9 @@ function Card({
       )}
       onClick={onClick}
     >
-      <img className="" src={`/tiles/${chapter}/${indexStr}.jpg`} alt={title} />
+      <img className="" src={`/tiles/${chapterId}/${indexStr}.jpg`} alt={title} />
       <span className="text-xs">{title}</span>
     </motion.button>
-  )
-}
-
-// const TestStateIndicator: FC = () => {
-//   // const { testState } = useContext(GameContext)'
-//   const testState = "playing"
-//   return (
-//     <div>
-//       <img
-//         className={classNames("h-20", { invisible: testState !== "playing" })}
-//         src="/listening.png"
-//         alt="Listen"
-//       />
-//     </div>
-//   )
-// }
-
-type Mode = "explore" | "practice" | "challenge"
-
-const BottomNavigation: FC<{
-  disabled: boolean
-  mode: Mode
-  onModeChanged: (mode: Mode) => void
-}> = ({ disabled, mode, onModeChanged }) => {
-  const ACTIVE_CLASSES = "active bg-base-300 text-base-900"
-  const INACTIVE_CLASSES = "bg-base-200"
-  return (
-    <div className="btm-nav">
-      <button
-        disabled={disabled}
-        className={classNames(mode === "explore" ? ACTIVE_CLASSES : INACTIVE_CLASSES)}
-        onClick={() => onModeChanged("explore")}
-      >
-        {/* <SunIcon className="size-6" /> */}
-        <EarIcon className="size-6" />
-        <span className="btm-nav-label">Explore</span>
-      </button>
-      <button
-        disabled={disabled}
-        className={classNames(mode === "practice" ? ACTIVE_CLASSES : INACTIVE_CLASSES)}
-        onClick={() => onModeChanged("practice")}
-      >
-        {/* <PaperAirplaneIcon className="size-6" /> */}
-        <TargetIcon className="size-6" />
-        <span className="btm-nav-label">Practice</span>
-      </button>
-      <button
-        disabled={disabled}
-        className={classNames(mode === "challenge" ? ACTIVE_CLASSES : INACTIVE_CLASSES)}
-        onClick={() => onModeChanged("challenge")}
-      >
-        {/* <RocketLaunchIcon className="size-6" /> */}
-        <BrainCircuitIcon className="size-6" />
-        <span className="btm-nav-label">Challenge</span>
-      </button>
-    </div>
   )
 }
 
@@ -135,16 +78,22 @@ function randomPermutation(length: number): Array<number> {
 
 // TODO
 // - Should also give auditory feedback
-// - Permutation
-// - Progress in single mode
-// - Mistakes explicitly retried
 
-type ModeState = "ready" | "playing" | "picking" | "celebration" | "end"
+type ModeState =
+  | "initial"
+  | "playing-explore"
+  | "prepare"
+  | "playing-practice"
+  | "picking"
+  | "feedback"
+  | "celebration"
+  | "end"
 
 export const PlayPage: FC = () => {
   const navigate = useNavigate()
-  const params = useParams<{ chapter: string; mode: string }>()
-  // const [navigationDisabled, setNavigationDisabled] = useState(false)
+  const params = useParams<{ chapter: string }>()
+  const chapterId = params.chapter ?? "01"
+  const chapterData = useMemo(() => CHAPTER_DATA[chapterId!], [chapterId])
 
   // this should be run only once per application lifetime
   const [initParticles, setInitParticles] = useState(false)
@@ -155,12 +104,9 @@ export const PlayPage: FC = () => {
     })
   }, [])
 
-  useEffect(() => {
-    console.log("params.mode", params.mode)
-    if (params.mode === "practice") {
-      initializeSingleMode()
-    }
-  }, [params.mode])
+  // useEffect(() => {
+  //   resetChapter()
+  // }, [params.chapter])
 
   // if (!params.chapter || !Object.keys(CHAPTER_DATA).includes(params.chapter)) {
   //   return <div>Invalid page</div>
@@ -178,13 +124,7 @@ export const PlayPage: FC = () => {
     audioElement.currentTime = 0
   }
 
-  const chapter = params.chapter as Chapter
-  const mode = params.mode as Mode
-  const chapterData = useMemo(() => CHAPTER_DATA[chapter], [chapter])
-
-  const [currentPlaying, setCurrentPlaying] = useState<number | null>(null)
-
-  const [modeState, setModeState] = useState<ModeState>("ready")
+  const [modeState, setModeState] = useState<ModeState>("initial")
   // This is the initial number of rounds, not including the ones added due to mistakes.
   const [numOriginalRounds, setNumOriginalRounds] = useState<number>(0)
   // This will be extended if the user makes a mistake.
@@ -194,12 +134,12 @@ export const PlayPage: FC = () => {
   const [numSuccesses, setNumSuccesses] = useState<number>(0)
   const [numFailures, setNumFailures] = useState<number>(0)
 
+  const [explorePlayingIndex, setExplorePlayingIndex] = useState<number | null>(null)
   const [practicePlayedIndex, setPracticePlayedIndex] = useState<number | null>(null)
   const [practicePickedIndex, setPracticePickedIndex] = useState<number | null>(null)
 
   const initializeSingleMode = () => {
-    setModeState("ready")
-
+    setModeState("prepare")
     // const length = Math.min(chapterData.names.length, 1)
     const length = chapterData.names.length
     const indices = randomPermutation(length)
@@ -211,79 +151,81 @@ export const PlayPage: FC = () => {
   }
 
   const onCardClicked = (index: number) => {
-    if (currentPlaying !== null) {
-      stopPlaying(currentPlaying)
-      onEndPlaying(currentPlaying)
+    if (explorePlayingIndex !== null) {
+      stopPlaying(explorePlayingIndex)
+      onEndPlaying(explorePlayingIndex)
     }
-    if (mode === "explore") {
-      // setNavigationDisabled(true)
-      setCurrentPlaying(index)
+    if (modeState === "initial") {
+      setModeState("playing-explore")
+      setExplorePlayingIndex(index)
       startPlaying(index)
-    } else if (mode === "practice") {
-      if (modeState === "picking") {
-        const played = singleModeRounds[currentRound]
-        const picked = index
-        setPracticePlayedIndex(played)
-        setPracticePickedIndex(picked)
-        // Use a local variable as the setters are async.
-        let numActualRounds = singleModeRounds.length
-        if (played === picked) {
-          setNumSuccesses(numSuccesses + 1)
-        } else {
-          setNumFailures(numFailures + 1)
-          // Add the failed index to the end of the queue.
-          numActualRounds += 1
-          setSingleModeRounds([...singleModeRounds, played])
-        }
-
-        const nextRound = currentRound + 1
-        setCurrentRound(nextRound)
-        if (nextRound < numActualRounds) {
-          setModeState("ready")
-        } else {
-          setModeState("celebration")
-          setTimeout(() => {
-            setModeState("end")
-          }, 3000)
-        }
+    }
+    if (modeState === "playing-practice" || modeState === "picking") {
+      const played = singleModeRounds[currentRound]
+      const picked = index
+      setPracticePlayedIndex(played)
+      setPracticePickedIndex(picked)
+      // Use a local variable as the setters are async.
+      let numActualRounds = singleModeRounds.length
+      const correct = played === picked
+      if (correct) {
+        setNumSuccesses(numSuccesses + 1)
+      } else {
+        setNumFailures(numFailures + 1)
+        // Add the failed index to the end of the queue.
+        numActualRounds += 1
+        setSingleModeRounds([...singleModeRounds, played])
       }
-    } else if (mode === "challenge") {
+
+      const nextRound = currentRound + 1
+      setCurrentRound(nextRound)
+      if (nextRound < numActualRounds) {
+        if (correct) {
+          setModeState("prepare")
+        } else {
+          setModeState("feedback")
+        }
+      } else {
+        setModeState("celebration")
+        setTimeout(() => {
+          setPracticePickedIndex(null)
+          setPracticePlayedIndex(null)
+          setModeState("end")
+        }, 3000)
+      }
     }
   }
 
   const playNextRound = () => {
-    setModeState("playing")
+    setModeState("playing-practice")
     setPracticePlayedIndex(null)
     setPracticePickedIndex(null)
     const index = singleModeRounds[currentRound]
-    // setCurrentPlaying(index)
     startPlaying(index)
   }
 
   const onEndPlaying = (index: number) => {
-    // setNavigationDisabled(false)
-    setCurrentPlaying(null)
-    if (mode === "practice") {
+    if (modeState == "playing-explore") {
+      setModeState("initial")
+      setExplorePlayingIndex(null)
+    } else if (modeState === "playing-practice") {
       setModeState("picking")
       setPracticePlayedIndex(index)
     }
   }
 
   const borderState = (index: number): BorderState => {
-    if (mode === "explore") {
-      return currentPlaying === index ? "selected" : null
+    if (modeState === "playing-explore" && explorePlayingIndex === index) {
+      return "selected"
     }
-    if (mode === "practice") {
-      if (practicePickedIndex === null) {
-        return null
-      }
-      if (practicePickedIndex === index) {
-        return practicePlayedIndex === index ? "correct" : "wrong"
-      }
-      if (practicePlayedIndex === index) {
-        return "correct"
-      }
+    if (practicePickedIndex === null) {
       return null
+    }
+    if (practicePickedIndex === index) {
+      return practicePlayedIndex === index ? "correct" : "wrong"
+    }
+    if (practicePlayedIndex === index) {
+      return "correct"
     }
     return null
   }
@@ -296,7 +238,7 @@ export const PlayPage: FC = () => {
           <audio
             key={audioId.id}
             id={`audio_${audioId.id}`}
-            src={`/sounds/${chapter}/${audioId.id}.ogg`}
+            src={`/sounds/${chapterId}/${audioId.id}.ogg`}
             onEnded={() => onEndPlaying(index)}
           />
         ))}
@@ -313,15 +255,15 @@ export const PlayPage: FC = () => {
           <span className="btn btn-ghost">
             <AudioWaveformIcon className="size-8" />
             <a className="text-xl">
-              Soni
+              Soni/{modeState}
               {/* {singleModeRounds.join(", ")}|{currentRound}/{numOriginalRounds} */}
             </a>
           </span>
           <div className="grow" />
           <select
             className="select max-w-xs"
-            value={chapter}
-            onChange={(e) => navigate(`/play/${e.target.value}/${mode}`)}
+            value={chapterId}
+            onChange={(e) => navigate(`/play/${e.target.value}`)}
           >
             {Object.keys(CHAPTER_DATA).map((chapter) => (
               <option key={chapter} value={chapter}>
@@ -332,7 +274,9 @@ export const PlayPage: FC = () => {
         </div>
 
         <div
-          className={classNames("my-2 w-full px-2", { invisible: mode === "explore" })}
+          className={classNames("my-2 w-full px-2", {
+            invisible: modeState == "initial" || modeState == "playing-explore",
+          })}
         >
           <ProgressBar numSuccesses={numSuccesses} numTotal={numOriginalRounds} />
         </div>
@@ -351,12 +295,11 @@ export const PlayPage: FC = () => {
             <Card
               key={index}
               disabled={
-                !(
-                  mode === "explore" ||
-                  (mode === "practice" && modeState === "picking")
+                !["initial", "playing-explore", "playing-practice", "picking"].includes(
+                  modeState,
                 )
               }
-              chapter={chapter}
+              chapterId={chapterId}
               imageId={index}
               title={name.name}
               borderState={borderState(index)}
@@ -366,40 +309,51 @@ export const PlayPage: FC = () => {
         </div>
 
         {/* Controls */}
-        <div className="absolute inset-x-0 bottom-0 mb-20 flex items-center justify-center px-2 py-2">
-          {mode == "practice" && modeState === "ready" && (
-            <div className="flex w-full items-center justify-center">
-              <button
-                className="flex size-48 items-center justify-center rounded-full bg-black text-yellow-500 blur-none drop-shadow-xl"
-                onClick={() => {
-                  playNextRound()
-                }}
-              >
-                <PlayIcon className="size-36" />
-              </button>
-            </div>
+        <div className="flex h-24 items-center justify-center bg-base-300 px-2 py-2">
+          {modeState === "initial" && (
+            <button
+              className="flex size-20 items-center justify-center rounded-full bg-black text-yellow-500 blur-none drop-shadow-xl"
+              onClick={() => {
+                initializeSingleMode()
+              }}
+            >
+              <RocketIcon className="size-16" />
+            </button>
           )}
-          {mode == "practice" && modeState === "end" && (
-            <div className="flex w-full items-center justify-center">
-              <button
-                className="flex size-48 items-center justify-center rounded-full bg-black text-yellow-500 blur-none drop-shadow-xl"
-                onClick={() => {
-                  initializeSingleMode()
-                }}
-              >
-                <RotateCcwIcon className="size-32" />
-              </button>
-            </div>
+
+          {modeState === "prepare" && (
+            <button
+              className="flex size-20 items-center justify-center rounded-full bg-black text-yellow-500 blur-none drop-shadow-xl"
+              onClick={() => {
+                playNextRound()
+              }}
+            >
+              <PlayIcon className="size-16" />
+            </button>
+          )}
+
+          {modeState === "feedback" && (
+            <button
+              className="flex size-20 items-center justify-center rounded-full bg-black text-yellow-500 blur-none drop-shadow-xl"
+              onClick={() => {
+                playNextRound()
+              }}
+            >
+              <CheckIcon className="size-16" />
+            </button>
+          )}
+          {modeState === "end" && (
+            <button
+              className="flex size-20 items-center justify-center rounded-full bg-black text-yellow-500 blur-none drop-shadow-xl"
+              onClick={() => {
+                initializeSingleMode()
+              }}
+            >
+              <RotateCcwIcon className="size-16" />
+            </button>
           )}
         </div>
       </div>
-      <BottomNavigation
-        disabled={modeState === "playing" || modeState === "celebration"}
-        mode={mode}
-        onModeChanged={(mode: Mode) =>
-          navigate(`/play/${chapter}/${mode}`, { replace: true })
-        }
-      />
       {initParticles && modeState === "celebration" && (
         <Particles id="tsparticles" options={CONFETTI_OPTIONS} />
       )}
@@ -422,20 +376,4 @@ const ProgressBar: FC<{
       max={numTotal}
     />
   )
-  {
-    /*<div className="my-4 flex w-full justify-stretch px-2">
-       <progress
-        className="progress progress-success w-0 rounded-none"
-        style={{ flexGrow: numTotal - numFailures }}
-        value={numSuccesses}
-        max={numTotal - numFailures}
-      ></progress>
-      <progress
-        className="progress progress-error w-0 rounded-none"
-        style={{ flexGrow: numFailures }}
-        value={1}
-        max={1}
-      ></progress> 
-    </div>*/
-  }
 }

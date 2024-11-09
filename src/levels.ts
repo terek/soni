@@ -1,16 +1,16 @@
-export type Chapter = "01" | "02" | "03" | "04"
-
 interface ChapterData {
   id: string
+  title: string
   numRows: number
   numCols: number
   classNames: string
   names: Array<{ id: string; name: string }>
 }
 
-export const CHAPTER_DATA: Record<Chapter, ChapterData> = {
+export const CHAPTER_DATA: Record<string, ChapterData> = {
   "01": {
     id: "01",
+    title: "Háziállatok",
     numRows: 3,
     numCols: 4,
     classNames:
@@ -32,6 +32,7 @@ export const CHAPTER_DATA: Record<Chapter, ChapterData> = {
   },
   "02": {
     id: "02",
+    title: "Vadállatok",
     numRows: 3,
     numCols: 4,
     classNames:
@@ -53,6 +54,7 @@ export const CHAPTER_DATA: Record<Chapter, ChapterData> = {
   },
   "03": {
     id: "03",
+    title: "Madarak",
     numRows: 3,
     numCols: 4,
     classNames:
@@ -74,6 +76,7 @@ export const CHAPTER_DATA: Record<Chapter, ChapterData> = {
   },
   "04": {
     id: "04",
+    title: "Járművek",
     numRows: 3,
     numCols: 4,
     classNames:
@@ -95,7 +98,7 @@ export const CHAPTER_DATA: Record<Chapter, ChapterData> = {
   },
 }
 
-export function getChapters(): Array<Chapter> {
-  const keys = Object.keys(CHAPTER_DATA) as Array<Chapter>
-  return keys
+export function getChapters(): Array<ChapterData> {
+  const values = Object.values(CHAPTER_DATA) as Array<ChapterData>
+  return values
 }

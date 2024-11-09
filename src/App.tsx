@@ -41,16 +41,14 @@ function App() {
   return (
     <>
       <StrictMode>
-        <div className="h-screen">
-          <GameProvider>
-            <Router>
-              <Routes>
-                <Route path="/" element={<LobbyPage />} />
-                <Route path="/play/:chapter/:mode" element={<PlayPage />} />
-              </Routes>
-            </Router>
-          </GameProvider>
-        </div>
+        <GameProvider>
+          <Router>
+            <Routes>
+              <Route path="/" element={<LobbyPage />} />
+              <Route path="/play/:chapter" element={<PlayPage />} />
+            </Routes>
+          </Router>
+        </GameProvider>
       </StrictMode>
     </>
   )
