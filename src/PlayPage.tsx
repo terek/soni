@@ -314,12 +314,12 @@ export const PlayPage: FC = () => {
         <div className="flex h-24 items-center justify-center bg-base-300 px-2 py-2">
           {modeState === "initial" && (
             <Button onClick={initializeSingleMode}>
-              <RocketIcon className="size-16" />
+              <RocketIcon className="size-12" />
             </Button>
           )}
           {modeState === "prepare" && (
             <Button onClick={playNextRound}>
-              <PlayIcon className="size-16" />
+              <PlayIcon className="size-12" />
             </Button>
           )}
           {(modeState === "playing-practice" || modeState === "playing-explore") && (
@@ -327,17 +327,17 @@ export const PlayPage: FC = () => {
           )}
           {modeState === "picking" && (
             <Button onClick={replaySound}>
-              <Volume2Icon className="size-16" />
+              <Volume2Icon className="size-12" />
             </Button>
           )}
           {modeState === "feedback" && (
             <Button onClick={playNextRound}>
-              <CheckIcon className="size-16" />
+              <CheckIcon className="size-12" />
             </Button>
           )}
           {modeState === "end" && (
             <Button onClick={initializeSingleMode}>
-              <RotateCcwIcon className="size-16" />
+              <RotateCcwIcon className="size-12" />
             </Button>
           )}
         </div>
