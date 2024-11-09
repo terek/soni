@@ -148,6 +148,14 @@ export const PlayPage: FC = () => {
     setCurrentRound(0)
   }
 
+  const onTimeoutFeedbackToPrepare = () => {
+    if (modeState === "feedback") {
+      setModeState("prepare")
+      setPracticePickedIndex(null)
+      setPracticePlayedIndex(null)
+    }
+  }
+
   const onCardClicked = (index: number) => {
     if (adhocPlayingIndex !== null) {
       stopPlaying(adhocPlayingIndex)
@@ -185,11 +193,7 @@ export const PlayPage: FC = () => {
       if (nextRound < numActualRounds) {
         if (correct) {
           setModeState("feedback")
-          setTimeout(() => {
-            setModeState("prepare")
-            setPracticePickedIndex(null)
-            setPracticePlayedIndex(null)
-          }, 2000)
+          setTimeout(onTimeoutFeedbackToPrepare, 2000)
         } else {
           setModeState("playing-feedback")
           setAdhocPlayingIndex(picked)
