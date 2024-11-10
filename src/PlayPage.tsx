@@ -11,6 +11,7 @@ import {
   PlayIcon,
   RocketIcon,
   RotateCcwIcon,
+  SatelliteIcon,
   SquareXIcon,
   ThumbsDownIcon,
   TrophyIcon,
@@ -80,14 +81,34 @@ function randomPermutation(length: number): Array<number> {
   return indices
 }
 
-// TODO
-// - Should also give auditory feedback
+function randomSequences(
+  maxIndex: number,
+  lengths: Array<number>,
+): Array<Array<number>> {
+  // Create a longer sequence to allow some repetitions.
+  const totalLength = lengths.reduce((a, b) => a + b, 0) * 2
+  const indexArray = Array.from({ length: totalLength }, (_, i) => i % maxIndex)
+  // Create a random permutation of the indices using Fisher-Yates shuffle.
+  for (let i = totalLength - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[indexArray[i], indexArray[j]] = [indexArray[j], indexArray[i]]
+  }
+  const sequences = []
+  let start = 0
+  for (const length of lengths) {
+    // TODO: do not allow the same index to appear twice in a sequence.
+    sequences.push(indexArray.slice(start, start + length))
+    start += length
+  }
+  return sequences
+}
 
 type ModeState =
   | "initial"
   | "playing-explore"
   | "prepare"
   | "playing-practice"
+  | "playing-sequence"
   | "picking"
   | "playing-feedback"
   | "feedback"
@@ -126,23 +147,39 @@ export const PlayPage: FC = () => {
   // This is the initial number of rounds, not including the ones added due to mistakes.
   const [numOriginalRounds, setNumOriginalRounds] = useState<number>(0)
   // This will be extended if the user makes a mistake.
+  type PlayMode = "single" | "sequence"
+  const [playMode, setPlayMode] = useState<PlayMode | null>(null)
   const [singleModeRounds, setSingleModeRounds] = useState<Array<number>>([])
-  // const [roundsOfSequenceMode, setRoundsOfSequenceMode] = useState<Array<Array<number>>>([])
+  const [sequenceModeRounds, setRoundsOfSequenceMode] = useState<number[][]>([])
   const [currentRound, setCurrentRound] = useState<number>(0)
   const [numSuccesses, setNumSuccesses] = useState<number>(0)
   const [numFailures, setNumFailures] = useState<number>(0)
+  const [sequenceRoundsResults, setSequenceRoundsResults] = useState<boolean[]>([])
 
   const [adhocPlayingIndex, setAdhocPlayingIndex] = useState<number | null>(null)
   const [practicePlayedIndex, setPracticePlayedIndex] = useState<number | null>(null)
   const [practicePickedIndex, setPracticePickedIndex] = useState<number | null>(null)
+  const [sequencePlayingIndex, setSequencePlayingIndex] = useState<number | null>(null)
+  const [sequencePickedIndices, setSequencePickedIndices] = useState<number[]>([])
 
-  const initializeSingleMode = () => {
+  const initializePlay = (playMode: PlayMode) => {
+    setPlayMode(playMode)
     setModeState("prepare")
     // const length = 2
-    const length = chapterData.names.length
-    const indices = randomPermutation(length)
-    setNumOriginalRounds(length)
-    setSingleModeRounds(indices)
+    if (playMode === "single") {
+      const length = chapterData.names.length
+      const indices = randomPermutation(length)
+      setNumOriginalRounds(length)
+      setSingleModeRounds(indices)
+      setRoundsOfSequenceMode([])
+    } else {
+      const lengths = [2, 2, 3]
+      const sequences = randomSequences(chapterData.names.length, lengths)
+      setNumOriginalRounds(lengths.length)
+      setSingleModeRounds([])
+      setRoundsOfSequenceMode(sequences)
+      setSequenceRoundsResults([])
+    }
     setNumSuccesses(0)
     setNumFailures(0)
     setCurrentRound(0)
@@ -171,7 +208,10 @@ export const PlayPage: FC = () => {
       setAdhocPlayingIndex(index)
       startPlaying(index)
     }
-    if (modeState === "playing-practice" || modeState === "picking") {
+    if (
+      playMode === "single" &&
+      (modeState === "playing-practice" || modeState === "picking")
+    ) {
       const played = singleModeRounds[currentRound]
       const picked = index
       setPracticePlayedIndex(played)
@@ -211,14 +251,50 @@ export const PlayPage: FC = () => {
         }, 3000)
       }
     }
+    if (playMode === "sequence" && modeState === "picking") {
+      const picked = [...sequencePickedIndices, index]
+      setSequencePickedIndices(picked)
+      if (picked.length === sequenceModeRounds[currentRound].length) {
+        const correct = picked.every(
+          (v, i) => v === sequenceModeRounds[currentRound][i],
+        )
+        setSequenceRoundsResults([...sequenceRoundsResults, correct])
+        if (correct) {
+          setNumSuccesses(numSuccesses + 1)
+        } else {
+          setNumFailures(numFailures + 1)
+        }
+        const nextRound = currentRound + 1
+        setCurrentRound(nextRound)
+        if (nextRound < numOriginalRounds) {
+          setModeState("feedback")
+        } else {
+          setModeState("celebration")
+          setTimeout(() => {
+            setModeState("end")
+          }, 3000)
+        }
+      }
+
+      console.log("sequence mode", index)
+    }
   }
 
   const playNextRound = () => {
-    setPracticePlayedIndex(null)
-    setPracticePickedIndex(null)
-    setModeState("playing-practice")
-    const index = singleModeRounds[currentRound]
-    startPlaying(index)
+    if (playMode === "single") {
+      setPracticePlayedIndex(null)
+      setPracticePickedIndex(null)
+      setModeState("playing-practice")
+      const index = singleModeRounds[currentRound]
+      startPlaying(index)
+    } else {
+      setPracticePlayedIndex(null)
+      setPracticePickedIndex(null)
+      setModeState("playing-sequence")
+      const sequence = sequenceModeRounds[currentRound]
+      setSequencePlayingIndex(0)
+      startPlaying(sequence[0])
+    }
   }
 
   const onFeedbackAccepted = () => {
@@ -228,9 +304,16 @@ export const PlayPage: FC = () => {
   }
 
   const replaySound = () => {
-    setModeState("playing-practice")
-    const index = singleModeRounds[currentRound]
-    startPlaying(index)
+    if (playMode === "single") {
+      setModeState("playing-practice")
+      const index = singleModeRounds[currentRound]
+      startPlaying(index)
+    } else {
+      const sequence = sequenceModeRounds[currentRound]
+      setModeState("playing-sequence")
+      setSequencePlayingIndex(0)
+      startPlaying(sequence[0])
+    }
   }
 
   const onEndPlaying = (index: number) => {
@@ -243,6 +326,16 @@ export const PlayPage: FC = () => {
     } else if (modeState === "playing-feedback") {
       setModeState("feedback")
       setAdhocPlayingIndex(null)
+    } else if (modeState === "playing-sequence") {
+      const sequence = sequenceModeRounds[currentRound]
+      const nextIndex = sequencePlayingIndex! + 1
+      if (nextIndex < sequence.length) {
+        setSequencePlayingIndex(nextIndex)
+        startPlaying(sequence[nextIndex])
+      } else {
+        setModeState("picking")
+        setSequencePickedIndices([])
+      }
     }
   }
 
@@ -250,7 +343,7 @@ export const PlayPage: FC = () => {
     if (modeState === "playing-explore" && adhocPlayingIndex === index) {
       return "selected"
     }
-    if (practicePickedIndex === null) {
+    if (playMode === "single" && practicePickedIndex === null) {
       return null
     }
     if (modeState === "playing-feedback") {
@@ -271,6 +364,21 @@ export const PlayPage: FC = () => {
         return "wrong"
       }
     }
+    if (playMode === "sequence" && modeState === "picking") {
+      return sequencePickedIndices.includes(index) ? "selected" : null
+    }
+    if (playMode === "sequence" && modeState === "feedback") {
+      const pickedPosition = sequencePickedIndices.indexOf(index)
+      if (pickedPosition === -1) {
+        return null
+      }
+      const feedbackRound = currentRound - 1
+      if (sequenceModeRounds[feedbackRound][pickedPosition] === index) {
+        return "correct"
+      }
+      return "wrong"
+    }
+
     return null
   }
 
@@ -305,6 +413,8 @@ export const PlayPage: FC = () => {
             <AudioWaveformIcon className="size-8" />
             <a className="text-xl">
               Soni
+              {/* /{modeState}/{(sequenceModeRounds[currentRound] ?? []).join(":")}/
+              {sequencePickedIndices.join(", ")} */}
               {/* {singleModeRounds.join(", ")}|{currentRound}/{numOriginalRounds} */}
             </a>
           </span>
@@ -319,7 +429,15 @@ export const PlayPage: FC = () => {
             invisible: modeState == "initial" || modeState == "playing-explore",
           })}
         >
-          <ProgressBar numSuccesses={numSuccesses} numTotal={numOriginalRounds} />
+          {playMode === "single" && (
+            <ProgressBar numSuccesses={numSuccesses} numTotal={numOriginalRounds} />
+          )}
+          {playMode === "sequence" && (
+            <MultiProgressBar
+              results={sequenceRoundsResults}
+              numTotal={numOriginalRounds}
+            />
+          )}
         </div>
 
         {/* Board */}
@@ -341,7 +459,11 @@ export const PlayPage: FC = () => {
                   (["playing-explore", "playing-feedback"].includes(modeState) &&
                     adhocPlayingIndex === index) ||
                   (modeState === "feedback" &&
-                    (practicePlayedIndex === index || practicePickedIndex === index))
+                    ((playMode === "single" &&
+                      (practicePlayedIndex === index ||
+                        practicePickedIndex === index)) ||
+                      (playMode === "sequence" &&
+                        sequencePickedIndices.includes(index))))
                 )
               }
               chapterId={chapterId}
@@ -368,24 +490,30 @@ export const PlayPage: FC = () => {
         </div>
 
         {/* Controls */}
-        <div className="flex h-24 items-center justify-center bg-base-300 px-2 py-2">
+        <div className="flex h-24 items-center justify-center gap-8 bg-base-300 px-2 py-2">
           {modeState === "initial" && (
-            <Button
-              onClick={() => {
-                initializeSingleMode()
-              }}
-            >
-              <RocketIcon className="size-12" />
-            </Button>
+            <>
+              <Button onClick={() => initializePlay("single")}>
+                <RocketIcon className="size-12" />
+              </Button>
+              <Button onClick={() => initializePlay("sequence")}>
+                <SatelliteIcon className="size-12" />
+              </Button>
+            </>
           )}
           {modeState === "prepare" && (
             <Button onClick={playNextRound}>
               <PlayIcon className="size-12" />
             </Button>
           )}
-          {["playing-explore", "playing-practice", "playing-feedback"].includes(
-            modeState,
-          ) && <span className="loading loading-ring loading-md"></span>}
+          {[
+            "playing-explore",
+            "playing-practice",
+            "playing-sequence",
+            "playing-feedback",
+          ].includes(modeState) && (
+            <span className="loading loading-ring loading-md"></span>
+          )}
           {modeState === "picking" && (
             <Button onClick={replaySound}>
               <Volume2Icon className="size-12" />
@@ -397,7 +525,7 @@ export const PlayPage: FC = () => {
             </Button>
           )}
           {modeState === "end" && (
-            <Button onClick={initializeSingleMode}>
+            <Button onClick={() => initializePlay(playMode!)}>
               <RotateCcwIcon className="size-12" />
             </Button>
           )}
@@ -425,6 +553,24 @@ const ProgressBar: FC<{
       value={numSuccesses}
       max={numTotal}
     />
+  )
+}
+
+const MultiProgressBar: FC<{
+  results: Array<boolean>
+  numTotal: number
+}> = ({ results, numTotal }) => {
+  const unitPercent = `${100 / numTotal}%`
+  return (
+    <div className="flex h-2 rounded-full bg-gray-300 first:*:rounded-l-full last:*:rounded-r-full">
+      {results.map((result, index) => (
+        <div
+          key={index}
+          style={{ width: unitPercent }}
+          className={result ? "bg-success" : "bg-error"}
+        />
+      ))}
+    </div>
   )
 }
 
