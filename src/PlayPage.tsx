@@ -562,14 +562,16 @@ const MultiProgressBar: FC<{
 }> = ({ results, numTotal }) => {
   const unitPercent = `${100 / numTotal}%`
   return (
-    <div className="flex h-2 rounded-full bg-gray-300 first:*:rounded-l-full last:*:rounded-r-full">
-      {results.map((result, index) => (
-        <div
-          key={index}
-          style={{ width: unitPercent }}
-          className={result ? "bg-success" : "bg-error"}
-        />
-      ))}
+    <div className="py-2">
+      <div className="flex h-2 rounded-full bg-gray-300 first:*:rounded-l-full last:*:rounded-r-full">
+        {results.map((result, index) => (
+          <div
+            key={index}
+            style={{ width: unitPercent }}
+            className={result ? "bg-success" : "bg-error"}
+          />
+        ))}
+      </div>
     </div>
   )
 }
