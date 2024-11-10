@@ -9,6 +9,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
+    "test": "vitest",
     "prettier": "prettier --write \"./src/**/*.{html,css,ts,tsx}\"",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist --cname soni.fun"
@@ -44,6 +45,7 @@
     "prettier-plugin-tailwindcss": "^0.6.8",
     "tailwindcss": "^3.4.14",
     "typescript": "^5.6.3",
-    "vite": "^5.4.10"
+    "vite": "^5.4.10",
+    "vitest": "^2.1.4"
   }
 }

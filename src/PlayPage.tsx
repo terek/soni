@@ -21,6 +21,7 @@ import { FC, useEffect, useMemo, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 
 import { CHAPTER_DATA } from "./levels"
+import { randomPermutation, randomSequences } from "./sequences"
 
 type BorderState = "selected" | "correct" | "wrong" | null
 
@@ -69,38 +70,6 @@ function Card({
       <span className="text-xs">{title}</span>
     </motion.button>
   )
-}
-
-function randomPermutation(length: number): Array<number> {
-  // Create a random permutation of the indices using Fisher-Yates shuffle.
-  const indices = Array.from({ length }, (_, i) => i)
-  for (let i = length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[indices[i], indices[j]] = [indices[j], indices[i]]
-  }
-  return indices
-}
-
-function randomSequences(
-  maxIndex: number,
-  lengths: Array<number>,
-): Array<Array<number>> {
-  // Create a longer sequence to allow some repetitions.
-  const totalLength = lengths.reduce((a, b) => a + b, 0) * 2
-  const indexArray = Array.from({ length: totalLength }, (_, i) => i % maxIndex)
-  // Create a random permutation of the indices using Fisher-Yates shuffle.
-  for (let i = totalLength - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[indexArray[i], indexArray[j]] = [indexArray[j], indexArray[i]]
-  }
-  const sequences = []
-  let start = 0
-  for (const length of lengths) {
-    // TODO: do not allow the same index to appear twice in a sequence.
-    sequences.push(indexArray.slice(start, start + length))
-    start += length
-  }
-  return sequences
 }
 
 type ModeState =
