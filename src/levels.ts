@@ -164,7 +164,7 @@ export const CHAPTER_DATA: Record<string, ChapterData> = {
       { id: "szinhaz", name: "színház" },
 
       { id: "buszpalyaudvar", name: "buszpályaudvar" },
-      { id: "stadium", name: "stadion" },
+      { id: "stadion", name: "stadion" },
       { id: "cirkusz", name: "cirkusz" },
     ],
   },
