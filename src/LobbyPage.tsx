@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 
 import { GameContext } from "./GameContext"
 import { getChapters } from "./levels"
+import { Nav } from "./Nav"
 
 const DifficultyControl = () => {
   const { difficulty, setDifficulty } = useContext(GameContext)
@@ -32,13 +33,12 @@ const DifficultyControl = () => {
 export const LobbyPage: FC = () => {
   const navigate = useNavigate()
   return (
-    <div className="flex h-dvh flex-col items-center justify-center gap-8">
-      <div className="mb-8 text-5xl text-yellow-400">Soni</div>
-      {/* <div className="text-3xl">Choose a chapter to play</div> */}
+    <div className="flex flex-col items-center justify-center gap-4">
+      <Nav></Nav>
       {getChapters().map((chapter) => (
         <button
           key={chapter.id}
-          className="badge bg-blue-950 p-8 text-3xl text-white"
+          className="badge min-w-[240px] bg-blue-950 p-8 text-2xl text-white"
           onClick={() => {
             navigate(`/play/${chapter.id}`)
           }}

@@ -6,7 +6,6 @@ import Particles, { initParticlesEngine } from "@tsparticles/react"
 import classNames from "classnames"
 import { motion } from "framer-motion"
 import {
-  AudioWaveformIcon,
   CheckIcon,
   PlayIcon,
   RocketIcon,
@@ -21,6 +20,7 @@ import { FC, useEffect, useMemo, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 
 import { CHAPTER_DATA } from "./levels"
+import { Nav } from "./Nav"
 import { randomPermutation, randomSequences } from "./sequences"
 
 type BorderState = "selected" | "correct" | "wrong" | null
@@ -377,21 +377,11 @@ export const PlayPage: FC = () => {
         )}
       >
         {/* Nav bar */}
-        <div className="navbar flex justify-stretch bg-base-200 shadow-sm">
-          <span className="btn btn-ghost">
-            <AudioWaveformIcon className="size-8" />
-            <a className="text-xl">
-              Soni
-              {/* /{modeState}/{(sequenceModeRounds[currentRound] ?? []).join(":")}/
-              {sequencePickedIndices.join(", ")} */}
-              {/* {singleModeRounds.join(", ")}|{currentRound}/{numOriginalRounds} */}
-            </a>
-          </span>
-          <div className="grow" />
+        <Nav>
           <button className="btn btn-ghost" onClick={showCloseModal}>
             <SquareXIcon className="size-8" />
           </button>
-        </div>
+        </Nav>
 
         <div
           className={classNames("my-2 w-full px-2", {
